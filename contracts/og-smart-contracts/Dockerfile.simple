@@ -1,0 +1,30 @@
+# Simple all-in-one Dockerfile for Hauska
+FROM node:22.14.0-alpine
+
+# Install Python for frontend server
+RUN apk add --no-cache python3 py3-pip make g++ git
+
+WORKDIR /app
+
+# Copy and install dependencies
+COPY package*.json ./
+COPY package-lock.json ./
+RUN npm ci
+
+# Copy all project files
+COPY . .
+
+# Compile contracts
+RUN npx hardhat compile
+
+# Expose ports
+EXPOSE 8545 3000
+
+# Copy startup script
+COPY docker-start.sh /start.sh
+RUN chmod +x /start.sh
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+CMD ["/start.sh"]

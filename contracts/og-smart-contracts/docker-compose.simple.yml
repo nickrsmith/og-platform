@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  hauska:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    ports:
+      - "8545:8545"  # Hardhat node
+      - "3000:3000"  # Frontend

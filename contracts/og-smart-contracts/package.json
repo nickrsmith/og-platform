@@ -1,0 +1,38 @@
+{
+  "name": "og-smart-contracts",
+  "version": "1.0.0",
+  "description": "O&G Smart Contracts for Verified Digital Assets",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:local": "hardhat test --network localhost",
+    "anvil": "anvil --accounts 10 --host 0.0.0.0 --block-time 1 --code-size-limit 200000",
+    "deploy:local": "hardhat run scripts/deploy-hauska-proxy.js --network localhost && hardhat run scripts/setup-proxy-system.js --network localhost",
+    "deploy:private": "hardhat run scripts/deploy-on-private.js --network privatechain",
+    "deploy:sepolia": "hardhat run scripts/deploy-hauska-proxy.js --network sepolia && hardhat run scripts/setup-proxy-system.js --network sepolia",
+    "verify": "hardhat verify --network sepolia",
+    "frontend": "node scripts/serve-frontend.js",
+    "dev": "npm run compile && npm run deploy:local && npm run frontend",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:fresh": "docker-compose down -v && docker-compose up -d",
+    "docker:anvil:build": "docker-compose -f docker-compose.anvil.yml build",
+    "docker:anvil:up": "docker-compose -f docker-compose.anvil.yml up -d",
+    "docker:anvil:down": "docker-compose -f docker-compose.anvil.yml down",
+    "docker:anvil:logs": "docker-compose -f docker-compose.anvil.yml logs -f",
+    "docker:anvil:fresh": "docker-compose -f docker-compose.anvil.yml down -v && docker-compose -f docker-compose.anvil.yml up -d",
+    "smoke-test": "hardhat run scripts/smoke-test.js --network localhost",
+    "test:contracts": "hardhat run scripts/test-contracts.js --network localhost",
+    "docker:test": "docker-compose exec hauska npm run smoke-test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@openzeppelin/contracts": "^4.9.6",
+    "@openzeppelin/contracts-upgradeable": "^4.9.6",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "hardhat": "^2.26.1"
+  }
+}

@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  hauska:
+    build: .
+    container_name: hauska-platform
+    ports:
+      - "3000:80"      # Frontend
+      - "8545:8545"    # Hardhat node
+    environment:
+      - NODE_ENV=development
+      - HARDHAT_NETWORK=localhost
+    volumes:
+      - ./deployments:/app/deployments
+      - ./docs:/app/docs
+    networks:
+      - hauska-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: IPFS node for decentralized storage
+  ipfs:
+    image: ipfs/go-ipfs:latest
+    container_name: hauska-ipfs
+    ports:
+      - "5001:5001"    # API
+      - "8080:8080"    # Gateway
+    volumes:
+      - ipfs-data:/data/ipfs
+    networks:
+      - hauska-network
+
+volumes:
+  ipfs-data:
+
+networks:
+  hauska-network:
+    driver: bridge

@@ -1,0 +1,77 @@
+services:
+  hauska:
+    build: .
+    container_name: hauska-platform
+    restart: always
+    ports:
+      - "3000:80"      # Frontend
+      - "8545:8545"    # Hardhat node
+    environment:
+      - NODE_ENV=development
+      - HARDHAT_NETWORK=localhost
+    volumes:
+      - ./deployments:/app/deployments
+      - ./docs:/app/docs
+    networks:
+      - hauska-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: IPFS node for decentralized storage
+  ipfs:
+    image: ipfs/go-ipfs:latest      
+    container_name: hauska-ipfs
+    restart: always
+    ports:
+      - "5001:5001"    # API
+      - "8080:8080"    # Gateway
+    volumes:
+      - ipfs-data:/data/ipfs
+    networks:
+      - hauska-network
+
+  # Optional: Graph node for indexing
+  graph-node:
+    image: graphprotocol/graph-node:latest
+    container_name: hauska-graph
+    restart: always
+    depends_on:
+      - postgres
+      - ipfs
+    environment:
+      postgres_host: postgres
+      postgres_user: graph
+      postgres_pass: graph-password
+      postgres_db: graph
+      ipfs: 'ipfs:5001'
+      ethereum: 'localhost:http://hauska:8545'
+      GRAPH_LOG: info
+    ports:
+      - "8000:8000"
+      - "8020:8020"
+    networks:
+      - hauska-network
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: hauska-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: graph
+      POSTGRES_PASSWORD: graph-password
+      POSTGRES_DB: graph
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - hauska-network
+
+volumes:
+  ipfs-data:
+  postgres-data:
+
+networks:
+  hauska-network:
+    driver: bridge
