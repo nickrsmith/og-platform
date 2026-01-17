@@ -40,16 +40,44 @@ This document provides a comprehensive mapping between the backend API endpoints
 
 ---
 
+### Verification (`/api/v1/verification`)
+
+| Endpoint | Method | Description | Frontend Usage |
+|----------|--------|-------------|----------------|
+| `/verification/persona/session` | POST | Create Persona verification session | `identity-verification.tsx` - start verification |
+| `/verification/persona/status` | GET | Get Persona verification status | `identity-verification.tsx` - check status |
+| `/verification/webhooks/persona` | POST | Persona webhook endpoint | Receives Persona verification status updates |
+
+**Controller**: `VerificationController` (`backend/apps/core-api/src/verification/verification.controller.ts`)
+
+---
+
 ### Users (`/api/v1/users`)
 
 | Endpoint | Method | Description | Frontend Usage |
 |----------|--------|-------------|----------------|
 | `/users/me` | GET | Get current user profile | `profile.tsx`, `useAuth` hook |
-| `/users/:id` | GET | Get user by ID | User detail views |
-| `/users/:id` | PATCH | Update user profile | `profile.tsx` - profile updates |
-| `/users/:id` | DELETE | Delete user account | Settings page |
+| `/users/p2p/:peerId` | GET | Get user by P2P peer ID | **Deferred for MVP** - P2P features coming later |
+| `/users/me/p2p-identity` | GET | Get current user's P2P identity | **Deferred for MVP** - P2P features coming later |
+| `/users/me/wallet/balance` | GET | Get user wallet balance | `wallet.tsx` - balance display |
+| `/users/me/sales` | GET | Get user's sales history | Sales analytics, portfolio |
+| `/users/me/transaction-history` | GET | Get user's transaction history | Transaction history views |
+| `/users/me/royalty-chart` | GET | Get royalty chart data | Portfolio charts, analytics |
 
 **Controller**: `UsersController` (`backend/apps/core-api/src/users/users.controller.ts`)
+
+**Note**: User profile updates may be handled via organizations endpoint for org members.
+
+**MVP User Identification**:
+- **Primary Identifier**: JWT User ID (`req.user.sub`) - UUID from user table
+- **Organization Context**: `req.user.organizationId` - User's organization membership
+- **Site Address**: `req.user.siteAddress` - Organization's unique site identifier
+- **Wallet Address**: Retrieved via `userId` lookup in wallet table (for blockchain operations)
+
+**MVP Scope**: P2P (peer-to-peer) features are deferred. For MVP, user identification uses:
+- JWT User ID (`sub`) as the primary identifier
+- Organization ID and Site Address for organization-scoped operations
+- Wallet Address (via user lookup) for blockchain transactions
 
 ---
 
@@ -60,45 +88,72 @@ This document provides a comprehensive mapping between the backend API endpoints
 | `/releases` | GET | List assets/releases with filters | `marketplace.tsx` - browse assets |
 | `/releases/:id` | GET | Get asset details | `asset-detail.tsx` - view asset |
 | `/releases` | POST | Create new asset listing | `create-listing.tsx` - create asset |
+|  |  | **PSA Fields**: `psaData` object with purchasePriceAllocation, revenueDistribution, whereMoniesGo, dealStructure |  |
 | `/releases/:id` | PATCH | Update asset listing | `asset-edit.tsx` - edit asset |
 | `/releases/:id` | DELETE | Delete asset listing | `my-assets.tsx` - delete action |
 | `/releases/:id/files` | POST | Upload asset files/thumbnails | `create-listing.tsx`, `asset-edit.tsx` |
-| `/releases/:id/files/:fileId` | DELETE | Delete asset file | Asset management |
+| `/releases/:id/licenses` | POST | License asset on-chain | Asset licensing flow |
+| `/releases/check-hash/:hash` | GET | Check if asset hash exists | Asset validation |
 
 **Controller**: `ReleasesController` (`backend/apps/core-api/src/releases/releases.controller.ts`)
 
+**PSA (Purchase and Sale Agreement) Fields** ✅ IMPLEMENTED:
+The `POST /releases` endpoint now accepts an optional `psaData` JSONB object containing:
+- **Basic PSA Information**: executionDate, effectiveDate, effectiveTime, depositPercent, depositAmount, closingDate, leasesNotes, wellsNotes, contractsNotes, allocatedValuesNotes
+- **Purchase Price Allocation** (5 fields): leases, wells, equipment, other, notes
+- **Revenue Distribution** (4 fields): sellerPercent, buyerPercent, other, notes
+- **Where Monies Go** (6 fields): sellerAmount, platformFee, integratorFee, escrowAmount, other, notes
+- **Deal Structure** (5 fields): type, paymentTerms, financingTerms, closingConditions, notes
+
+PSA data is stored in the release metadata and returned in `GET /releases/:id` responses.
+
+**MVP Note**: Releases use `siteAddress` and `organizationId` from JWT for identification. P2P fields may be present in JWT but are not used for MVP business logic.
+
 **Frontend Service**: `assets.service.ts`
-- `listAssets()` → `GET /assets`
-- `getAsset(id)` → `GET /assets/:id`
-- `createAsset(data)` → `POST /assets`
-- `updateAsset(id, data)` → `PATCH /assets/:id`
-- `deleteAsset(id)` → `DELETE /assets/:id`
+- `listAssets(options)` → `GET /releases`
+- `getAsset(id)` → `GET /releases/:id`
+- `createAsset(data)` → `POST /releases`
+- `updateAsset(id, data)` → `PATCH /releases/:id`
+- `deleteAsset(id)` → `DELETE /releases/:id`
+- `uploadAssetFiles(id, files)` → `POST /releases/:id/files`
+- `licenseAsset(id, attemptId)` → `POST /releases/:id/licenses`
+- `checkAssetHash(hash)` → `GET /releases/check-hash/:hash`
 
 ---
 
-### Data Rooms (`/api/v1/data-rooms`)
+### Data Rooms (`/api/v1/data-rooms`) ✅ IMPLEMENTED
 
-| Endpoint | Method | Description | Frontend Usage |
-|----------|--------|-------------|----------------|
-| `/data-rooms` | GET | List data rooms | `data-rooms.tsx` - list view |
-| `/data-rooms/:id` | GET | Get data room with documents | `data-room.tsx`, `data-room-viewer.tsx` |
-| `/data-rooms/asset/:assetId` | GET | Get data room by asset ID | `asset-detail.tsx` - link to data room |
-| `/data-rooms` | POST | Create new data room | `create-listing.tsx` - auto-create on listing |
-| `/data-rooms/:id` | PATCH | Update data room | `data-room.tsx` - update settings |
-| `/data-rooms/:id` | DELETE | Delete data room | `data-room.tsx` - delete action |
-| `/data-rooms/:id/documents` | POST | Upload document | `data-room.tsx` - document upload |
-| `/data-rooms/:id/documents/:docId` | DELETE | Delete document | `data-room.tsx` - document management |
+| Endpoint | Method | Description | Frontend Usage | Status |
+|----------|--------|-------------|----------------|--------|
+| `/data-rooms` | POST | Create data room | `create-listing.tsx` - create data room | ✅ Complete |
+| `/data-rooms` | GET | List data rooms with filters | `data-rooms.tsx` - list data rooms | ✅ Complete |
+| `/data-rooms/:id` | GET | Get data room with documents | `data-room-viewer.tsx` - view data room | ✅ Complete |
+| `/data-rooms/listing/:listingId` | GET | Get data room by listing/release ID | `asset-detail.tsx` - linked data room | ✅ Complete |
+| `/data-rooms/asset/:assetId` | GET | Get data room by asset ID | `asset-detail.tsx` - linked data room | ✅ Complete |
+| `/data-rooms/:id` | PATCH | Update data room | `data-room.tsx` - edit data room | ✅ Complete |
+| `/data-rooms/:id` | DELETE | Delete data room | `data-rooms.tsx` - delete action | ✅ Complete |
+| `/data-rooms/:id/documents` | POST | Upload document (multipart/form-data) | `data-room.tsx` - upload document | ✅ Complete |
+| `/data-rooms/:id/documents/:docId` | DELETE | Delete document | `data-room.tsx` - delete document | ✅ Complete |
 
-**Controller**: Data rooms may be handled by core-api or separate service
+**Controller**: `DataRoomsController` (`backend/apps/core-api/src/data-rooms/data-rooms.controller.ts`)
 
-**Frontend Service**: `data-rooms.service.ts`
-- `listDataRooms()` → `GET /data-rooms`
-- `getDataRoom(id)` → `GET /data-rooms/:id`
-- `getDataRoomByAsset(assetId)` → `GET /data-rooms/asset/:assetId`
+**Service**: `DataRoomsService` (`backend/apps/core-api/src/data-rooms/data-rooms.service.ts`)
+- Supports folder organization via `folderId`
+- Tracks `documentCount` and `totalSize` automatically
+- Documents stored with IPFS CID/URL (metadata only, IPFS processing can be added later)
+
+**Frontend Service**: `data-rooms.service.ts` exists in `frontend/src/lib/services/`
 - `createDataRoom(data)` → `POST /data-rooms`
+- `getDataRoom(id)` → `GET /data-rooms/:id`
+- `getDataRoomByListing(listingId)` → `GET /data-rooms/listing/:listingId`
+- `getDataRoomByAsset(assetId)` → `GET /data-rooms/asset/:assetId`
+- `listDataRooms(options)` → `GET /data-rooms`
 - `updateDataRoom(id, data)` → `PATCH /data-rooms/:id`
-- `uploadDocument(dataRoomId, file)` → `POST /data-rooms/:id/documents`
-- `deleteDocument(dataRoomId, docId)` → `DELETE /data-rooms/:id/documents/:docId`
+- `deleteDataRoom(id)` → `DELETE /data-rooms/:id`
+- `uploadDocument(id, file, data)` → `POST /data-rooms/:id/documents`
+- `deleteDocument(id, docId)` → `DELETE /data-rooms/:id/documents/:docId`
+
+**Note**: Data rooms are implemented in core-api (not a separate service). Frontend endpoints match expected structure.
 
 ---
 
@@ -117,7 +172,15 @@ This document provides a comprehensive mapping between the backend API endpoints
 
 **Controller**: `OffersController` (`backend/apps/core-api/src/offers/offers.controller.ts`)
 
-**Frontend Service**: Direct API calls from `offers.tsx`
+**Frontend Service**: `offers.service.ts`
+- `createOffer(data, idempotencyKey)` → `POST /offers`
+- `getOffer(id)` → `GET /offers/:id`
+- `listOffers(options)` → `GET /offers`
+- `updateOffer(id, data, key)` → `PATCH /offers/:id`
+- `acceptOffer(id, data, key)` → `POST /offers/:id/accept`
+- `declineOffer(id, data, key)` → `POST /offers/:id/decline`
+- `withdrawOffer(id, key)` → `POST /offers/:id/withdraw`
+- `createCounterOffer(id, data, key)` → `POST /offers/:id/counter`
 
 ---
 
@@ -136,7 +199,13 @@ This document provides a comprehensive mapping between the backend API endpoints
 | `/transactions/:id/settlement-statement` | GET | Get settlement statement | `settlement-detail.tsx` - view statement |
 | `/transactions/:id/recording-status` | GET | Get recording status | `settlement-detail.tsx` - recording status |
 
-**Controller**: `TransactionsBusinessController` (`backend/apps/core-api/src/transactions/transactions-business.controller.ts`)
+**Controllers**: 
+- `TransactionsBusinessController` (`backend/apps/core-api/src/transactions/transactions-business.controller.ts`) - Business logic endpoints
+- `TransactionsController` (`backend/apps/core-api/src/transactions/transactions.controller.ts`) - Job status and transaction lookup
+
+**Additional Endpoints**:
+- `GET /transactions/jobs/:jobId` - Get blockchain job status
+- `GET /transactions/:id` - Get transaction status (simplified lookup)
 
 **Frontend Service**: `transactions.service.ts`
 - `createTransaction(data, idempotencyKey)` → `POST /transactions`
@@ -326,17 +395,50 @@ PENDING → EARNEST_DEPOSITED → DUE_DILIGENCE → FUNDING → CLOSED
 
 | Endpoint | Method | Description | Frontend Usage |
 |----------|--------|-------------|----------------|
-| `/organizations` | GET | List organizations | `organization.tsx` |
+| `/organizations/requests/me` | GET | Get my organization request status | Registration flow |
+| `/organizations/requests` | POST | Submit organization creation request | Registration flow |
+| `/organizations/me` | GET | Get my organization | `organization.tsx`, `company-profile.tsx` |
+| `/organizations/me/logo/status` | GET | Get logo upload status | `organization.tsx` - logo status |
+| `/organizations/me/logo` | POST | Upload organization logo | `organization.tsx` - logo upload |
+| `/organizations/me` | PATCH | Update my organization | `organization.tsx`, `company-profile.tsx` |
+| `/organizations/me/members` | GET | List my organization members | `team.tsx` |
+| `/organizations/me/invites` | POST | Invite member to organization | `team.tsx` - invite member |
+| `/organizations/invitations/accept` | POST | Accept organization invitation | Invitation acceptance flow |
+| `/organizations` | GET | List organizations | Browse organizations |
+| `/organizations/site/:siteAddress` | GET | Get organization by site address | Site lookup |
 | `/organizations/:id` | GET | Get organization details | `company-profile.tsx` |
-| `/organizations` | POST | Create organization | `organization.tsx` - create org |
-| `/organizations/:id` | PATCH | Update organization | `organization.tsx`, `company-profile.tsx` |
-| `/organizations/:id/members` | GET | List organization members | `team.tsx` |
-| `/organizations/:id/members` | POST | Add member | `team.tsx` - add member |
-| `/organizations/:id/members/:memberId` | DELETE | Remove member | `team.tsx` - remove member |
-| `/organizations/:id/roles` | GET | List roles | `roles.tsx` |
-| `/organizations/:id/roles` | POST | Create role | `roles.tsx` - create role |
+| `/organizations/me/following` | GET | Get organizations I'm following | Following list |
+| `/organizations/:id/follow-status` | GET | Get follow status for organization | Follow button state |
+| `/organizations/:id/follow` | POST | Follow organization | Follow action |
+| `/organizations/:id/follow` | DELETE | Unfollow organization | Unfollow action |
+| `/organizations/me/earnings/balance` | GET | Get organization earnings balance | Revenue dashboard |
+| `/organizations/me/earnings/withdraw` | POST | Initiate earnings withdrawal | Earnings withdrawal |
+| `/organizations/me/subscriptions` | GET | Get my organization subscriptions | Subscriptions list |
+| `/organizations/subscriptions` | POST | Create subscription | Subscribe to organization |
+| `/organizations/subscriptions/:targetSiteAddress` | DELETE | Remove subscription | Unsubscribe |
 
 **Controller**: `OrganizationsController` (`backend/apps/core-api/src/organizations/organizations.controller.ts`)
+
+---
+
+### Division Orders (`/api/v1/division-orders`)
+
+| Endpoint | Method | Description | Frontend Usage |
+|----------|--------|-------------|----------------|
+| `/division-orders` | POST | Create division order | `phase2/division-orders.tsx` - create DO |
+| `/division-orders` | GET | List division orders | `phase2/division-orders.tsx` - list view |
+| `/division-orders/:id` | GET | Get division order by ID | `phase2/division-orders.tsx` - detail view |
+| `/division-orders/:id` | PATCH | Update division order | `phase2/division-orders.tsx` - edit |
+| `/division-orders/:id/approve` | POST | Approve division order | `phase2/division-orders.tsx` - approve |
+| `/division-orders/:id/reject` | POST | Reject division order | `phase2/division-orders.tsx` - reject |
+| `/division-orders/:id/transfers` | POST | Create ownership transfer | `phase2/division-orders.tsx` - create transfer |
+| `/division-orders/:id/transfers/:transferId/approve` | POST | Approve ownership transfer | `phase2/division-orders.tsx` - approve transfer |
+| `/division-orders/:id/transfers/:transferId/reject` | POST | Reject ownership transfer | `phase2/division-orders.tsx` - reject transfer |
+| `/division-orders/:id/calculate-revenue` | POST | Calculate revenue split | Revenue calculations |
+
+**Controller**: `DivisionOrdersController` (`backend/apps/core-api/src/division-orders/division-orders.controller.ts`)
+
+**Frontend Service**: `division-orders.service.ts`
 
 ---
 
@@ -381,13 +483,13 @@ PENDING → EARNEST_DEPOSITED → DUE_DILIGENCE → FUNDING → CLOSED
 
 ---
 
-### Notifications (`/api/v1/notifications`)
+### Notifications (`/api/v1/notifications`) ✅ IMPLEMENTED
 
-| Endpoint | Method | Description | Frontend Usage |
-|----------|--------|-------------|----------------|
-| `/notifications` | GET | Get user notifications | `notifications.tsx` - list notifications |
-| `/notifications/:id/read` | PATCH | Mark notification as read | `notifications.tsx` - mark read |
-| `/notifications/read-all` | PATCH | Mark all notifications as read | `notifications.tsx` - mark all read |
+| Endpoint | Method | Description | Frontend Usage | Status |
+|----------|--------|-------------|----------------|--------|
+| `/notifications` | GET | Get user notifications (paginated, filtered) | `notifications.tsx` - list notifications | ✅ Complete |
+| `/notifications/:id/read` | PATCH | Mark notification as read | `notifications.tsx` - mark read | ✅ Complete |
+| `/notifications/read-all` | PATCH | Mark all notifications as read | `notifications.tsx` - mark all read | ✅ Complete |
 
 **Notification Types**:
 - `OFFER_CREATED`, `OFFER_ACCEPTED`, `OFFER_DECLINED`, `OFFER_COUNTERED`, `OFFER_WITHDRAWN`, `OFFER_EXPIRED`
@@ -396,44 +498,41 @@ PENDING → EARNEST_DEPOSITED → DUE_DILIGENCE → FUNDING → CLOSED
 
 **Channels**: `EMAIL`, `IN_APP`, `SMS`
 
+**Controller**: `NotificationsController` (`backend/apps/core-api/src/notifications/notifications.controller.ts`)
+
 **Service**: `NotificationsService` (`backend/apps/core-api/src/notifications/notifications.service.ts`)
 - Automatically sends notifications on offer/transaction events
 - Creates notification records in database
 - Sends email notifications via EmailService
+- **Pagination**: Supports `page` and `pageSize` query parameters (default: page=1, pageSize=20)
+- **Filtering**: Supports `type`, `read`, and `unreadOnly` query parameters
+- Returns paginated response with `notifications`, `total`, `page`, `pageSize`, and `unreadCount`
 
 ---
 
 ---
 
-### Webhooks
+### Simplify E-Notary & E-Recording (`/api/v1`)
 
-#### Persona Webhooks (`/api/v1/webhooks/persona`)
+| Endpoint | Method | Description | Frontend Usage |
+|----------|--------|-------------|----------------|
+| `/notary/simplify/session` | POST | Create Simplify e-notary session | `settlement-detail.tsx` - notary session |
+| `/recording/simplify/submit` | POST | Submit recording to Simplify | `settlement-detail.tsx` - recording submission |
+| `/webhooks/simplify/notary` | POST | Simplify e-notary webhook | Receives notary session completion |
+| `/webhooks/simplify/recording` | POST | Simplify e-recording webhook | Receives recording status updates |
 
-| Endpoint | Method | Description | Usage |
-|----------|--------|-------------|-------|
-| `/webhooks/persona` | POST | Persona verification webhook | Receives Persona verification status updates |
+**Controller**: `SimplifyController` (`backend/apps/core-api/src/simplify/simplify.controller.ts`)
 
-**Webhook Events**:
-- Verification completed
-- Verification failed
-- Verification pending
+---
 
-**Handler**: Updates user `personaVerified` status in database
-
-#### Simplify Webhooks
+### Core API Utilities (`/api/v1`)
 
 | Endpoint | Method | Description | Usage |
 |----------|--------|-------------|-------|
-| `/webhooks/simplify/notary` | POST | Simplify notary completion webhook | Receives notary session completion |
-| `/webhooks/simplify/recording` | POST | Simplify recording completion webhook | Receives recording status updates |
+| `/health` | GET | Health check endpoint | System health monitoring |
+| `/platform/fees` | GET | Get platform fee structure | Fee information display |
 
-**Webhook Events**:
-- Notary session completed
-- Recording submitted
-- Recording completed
-- Recording failed
-
-**Handler**: Updates transaction `recordingStatus` in database
+**Controller**: `CoreApiController` (`backend/apps/core-api/src/core-api.controller.ts`)
 
 ---
 
@@ -595,6 +694,15 @@ Internal service for file storage and IPFS pinning. Processes jobs asynchronousl
 | `/offers` | `offers.tsx` | List/manage offers | `GET /offers`, `POST /offers/:id/accept`, etc. |
 | `/settlements` | `settlements.tsx` | List transactions | `GET /transactions` |
 | `/settlements/:id` | `settlement-detail.tsx` | Transaction details | `GET /transactions/:id`, `POST /transactions/:id/close` |
+| `/payees` | `payees.tsx` | Payees management | Payee management (Phase 2 feature) |
+| `/phase2` | `phase2.tsx` | Phase 2 landing page | Phase 2 navigation hub |
+| `/phase2/division-orders` | `phase2/division-orders.tsx` | Division orders management | Division orders workflow |
+| `/phase2/leases` | `phase2/leases.tsx` | Leases management | Leases workflow |
+| `/phase2/obligations` | `phase2/obligations.tsx` | Obligations management | Obligations workflow |
+| `/phase2/jib-decks` | `phase2/jib-decks.tsx` | JIB decks management | JIB decks workflow |
+| `/phase2/title-curative` | `phase2/title-curative.tsx` | Title curative workflow | Title curative process |
+| `/phase2/contract-areas` | `phase2/contract-areas.tsx` | Contract areas management | Contract areas workflow |
+| `/phase2/suspense` | `phase2/suspense.tsx` | Suspense management | Suspense account workflow |
 
 ---
 
@@ -639,7 +747,7 @@ Internal service for file storage and IPFS pinning. Processes jobs asynchronousl
 
 | Route | Component | Description | Backend Endpoints |
 |-------|-----------|-------------|-------------------|
-| `/portfolio` | `portfolio.tsx` | Portfolio analytics | `GET /assets/portfolio`, `GET /revenue/stats/:orgContractAddress` |
+| `/portfolio` | `portfolio.tsx` | Portfolio analytics | `GET /users/me/sales`, `GET /users/me/royalty-chart`, `GET /revenue/stats/:orgContractAddress` |
 
 ---
 
@@ -699,7 +807,7 @@ Internal service for file storage and IPFS pinning. Processes jobs asynchronousl
    → File uploads (thumbnails, documents)
 
 3. Form submission
-   → Frontend: `createAsset(data)` → `POST /assets`
+   → Frontend: `createAsset(data)` → `POST /releases`
    → Backend creates asset/release record
    → Backend auto-creates data room: `POST /data-rooms` (linked to asset)
    → Returns asset ID
@@ -728,13 +836,13 @@ Internal service for file storage and IPFS pinning. Processes jobs asynchronousl
 
 ```
 1. User visits `/marketplace` or `/`
-   → Frontend: `listAssets()` → `GET /assets`
+   → Frontend: `listAssets(options)` → `GET /releases`
    → Displays paginated asset cards
    → Filters: type, status, category, basin, state
 
 2. User clicks on asset card
    → Navigates to `/asset/:id`
-   → Frontend: `getAsset(id)` → `GET /assets/:id`
+   → Frontend: `getAsset(id)` → `GET /releases/:id`
    → Displays full asset details
    → Shows data room link if available
 
@@ -747,7 +855,7 @@ Internal service for file storage and IPFS pinning. Processes jobs asynchronousl
 **Backend Flow**:
 - `GET /releases` - List assets with filters
 - `GET /releases/:id` - Get asset details
-- `GET /data-rooms/asset/:assetId` - Get linked data room
+- Note: Data room endpoints may not be fully implemented; check backend implementation status
 
 ---
 
@@ -957,7 +1065,7 @@ NOT_STARTED → NOTARY_IN_PROGRESS → NOTARY_COMPLETED → SUBMITTED → PENDIN
    → Organization views earnings: `GET /revenue/earnings/:organizationId`
    → Statistics: `GET /revenue/stats/:orgContractAddress`
    → Blockchain queries: `GET /rpc/revenue-distributor/stats/:orgContractAddress`
-   → Portfolio analytics: `GET /assets/portfolio`
+   → Portfolio analytics: `GET /users/me/sales`, `GET /users/me/royalty-chart`
 ```
 
 **Backend Flow**:
@@ -978,11 +1086,14 @@ NOT_STARTED → NOTARY_IN_PROGRESS → NOTARY_COMPLETED → SUBMITTED → PENDIN
 
 All API calls go through service layer in `frontend/src/lib/services/`:
 
-- **`assets.service.ts`**: Asset/portfolio operations
+- **`assets.service.ts`**: Asset/releases and portfolio operations
 - **`transactions.service.ts`**: Transaction management
 - **`data-rooms.service.ts`**: Data room operations
 - **`revenue.service.ts`**: Revenue calculations
 - **`analytics.service.ts`**: Analytics data
+- **`offers.service.ts`**: Offer management (create, accept, decline, counter)
+- **`division-orders.service.ts`**: Division orders management
+- **`verification.service.ts`**: Identity verification (Persona)
 
 **API Client**: `frontend/src/lib/api.ts`
 - Base URL: `process.env.VITE_API_URL || 'http://localhost:3000/api/v1'`
@@ -1075,7 +1186,7 @@ All API calls go through service layer in `frontend/src/lib/services/`:
 ```
 User → create-listing.tsx
   → createAsset(data)
-  → POST /assets
+  → POST /releases
   → Backend: ReleasesController.create()
   → Database: Asset created
   → Auto-create: POST /data-rooms
@@ -1238,6 +1349,7 @@ Navigation is category-specific (see `navigation-config.tsx`):
 ❌ AI Run Sheets and Deal Analytics  
 ❌ Advanced portfolio analytics  
 ❌ Tokenization of assets (blockchain automation is MVP, tokenization is not)
+❌ P2P (peer-to-peer) features - P2P identity, peer discovery, etc.
 
 ---
 
