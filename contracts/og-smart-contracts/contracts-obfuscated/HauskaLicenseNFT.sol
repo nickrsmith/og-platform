@@ -7,13 +7,13 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./interfaces/IHauskaStructs.sol";
+import "./interfaces/IEmpressaStructs.sol";
 
-interface IHauskaLicenseMetadata {
+interface IEmpressaLicenseMetadata {
     function tokenURI(uint256 _va95b9f) external view returns (string memory);
 }
 
-contract HauskaLicenseNFT is ERC721, ERC721Enumerable, ERC721URIStorage, AccessControl, Pausable {
+contract EmpressaLicenseNFT is ERC721, ERC721Enumerable, ERC721URIStorage, AccessControl, Pausable {
     using Counters for Counters.Counter;
 
     bytes32 public constant _c46ff91 = keccak256("_c46ff91");
@@ -55,7 +55,7 @@ contract HauskaLicenseNFT is ERC721, ERC721Enumerable, ERC721URIStorage, AccessC
     event _ee5e841(uint256 indexed _va95b9f);
     event _ed69c56(uint256 indexed _va95b9f);
 
-    constructor() ERC721("Hauska License", "HLICENSE") {
+    constructor() ERC721("Empressa License", "HLICENSE") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(_c46ff91, msg.sender);
         _grantRole(_c169ad4, msg.sender);
@@ -235,7 +235,7 @@ contract HauskaLicenseNFT is ERC721, ERC721Enumerable, ERC721URIStorage, AccessC
         require(_exists(_va95b9f), "Token does not exist");
         
         if (_v555cb8 != address(0)) {
-            try IHauskaLicenseMetadata(_v555cb8).tokenURI(_va95b9f) returns (string memory _v2c6d68) {
+            try IEmpressaLicenseMetadata(_v555cb8).tokenURI(_va95b9f) returns (string memory _v2c6d68) {
                 return _v2c6d68;
             } catch {
                 

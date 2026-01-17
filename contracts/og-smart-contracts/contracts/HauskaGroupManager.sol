@@ -2,15 +2,15 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IHauskaStructs.sol";
-import "./interfaces/IHauskaContracts.sol";
+import "./interfaces/IEmpressaStructs.sol";
+import "./interfaces/IEmpressaContracts.sol";
 
 interface IAssetRegistry {
     function isAssetVerified(address orgContract, uint256 assetId) external view returns (bool);
-    function getAsset(address orgContract, uint256 assetId) external view returns (IHauskaStructs.VerifiedDigitalAsset memory);
+    function getAsset(address orgContract, uint256 assetId) external view returns (IEmpressaStructs.VerifiedDigitalAsset memory);
 }
 
-contract HauskaGroupManager is AccessControl, IHauskaStructs {
+contract EmpressaGroupManager is AccessControl, IEmpressaStructs {
     bytes32 public constant GROUP_ADMIN_ROLE = keccak256("GROUP_ADMIN_ROLE");
     bytes32 public constant ORG_CONTRACT_ROLE = keccak256("ORG_CONTRACT_ROLE");
     
@@ -91,7 +91,7 @@ contract HauskaGroupManager is AccessControl, IHauskaStructs {
             );
             
             // Check if the creator owns the asset
-            IHauskaStructs.VerifiedDigitalAsset memory asset = IAssetRegistry(assetRegistry).getAsset(orgContract, assetIds[i]);
+            IEmpressaStructs.VerifiedDigitalAsset memory asset = IAssetRegistry(assetRegistry).getAsset(orgContract, assetIds[i]);
             require(asset.owner == creator, "Creator must own all assets in the group");
         }
         
@@ -181,8 +181,8 @@ contract HauskaGroupManager is AccessControl, IHauskaStructs {
         uint256 groupId
     ) external view returns (AssetGroup memory) {
         AssetGroup memory group = orgGroups[orgContract][groupId];
-        (uint32 hauskaFeePct, uint32 integratorFeePct) = IHauskaRevenueDistributor(IHauskaOrgContract(orgContract).revenueDistributor()).getCustomFees(orgContract);
-        group.groupPrice = group.groupPrice * (10000 + hauskaFeePct + integratorFeePct) / 10000;
+        (uint32 EmpressaFeePct, uint32 integratorFeePct) = IEmpressaRevenueDistributor(IEmpressaOrgContract(orgContract).revenueDistributor()).getCustomFees(orgContract);
+        group.groupPrice = group.groupPrice * (10000 + EmpressaFeePct + integratorFeePct) / 10000;
         return group;
     }
     

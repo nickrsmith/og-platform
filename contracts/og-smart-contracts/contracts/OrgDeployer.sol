@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./HauskaOrgContract.sol";
+import "./EmpressaOrgContract.sol";
 
 contract OrgDeployer {
     function deploy(
@@ -9,6 +9,6 @@ contract OrgDeployer {
         address principal,
         address integrationPartner
     ) external returns (address org) {
-        org = address(new HauskaOrgContract(factory, principal, integrationPartner));
+        org = address(new EmpressaOrgContract(factory, principal, integrationPartner));
     }
 }

@@ -65,21 +65,21 @@ library RoleWiringLibLite {
 
 /* ========= Factory (full helpers restored) ========= */
 
-contract HauskaContractFactoryLite {
+contract EmpressaContractFactoryLite {
     /* errors */
     error InvalidAddress();
     error ModulesAlreadySet();
     error ModulesNotSet();
     error PrincipalHasContract();
     error InvalidContract();
-    error HauskaFeeTooHigh();
+    error EmpressaFeeTooHigh();
     error IntegratorFeeTooHigh();
 
     /* admin (tiny) */
     address public admin;
 
     /* fees (bps: 100 = 1%) */
-    uint32 public hauskaFeePct = 500;     // 5%
+    uint32 public EmpressaFeePct = 500;     // 5%
     uint32 public integratorFeePct = 100; // 1%
 
     /* pause */
@@ -104,7 +104,7 @@ contract HauskaContractFactoryLite {
     /* events */
     event ContractCreated(address indexed principal, address indexed org, address indexed integrationPartner);
     event ContractRemoved(address indexed org);
-    event PlatformFeesUpdated(uint32 hauskaFee, uint32 integratorFee);
+    event PlatformFeesUpdated(uint32 EmpressaFee, uint32 integratorFee);
     event ModulesSet(address licenseManager, address assetRegistry, address groupManager, address revenueDistributor, address assetNFT);
     event OrgDeployerSet(address deployer);
     event Paused(bool state);
@@ -172,12 +172,12 @@ contract HauskaContractFactoryLite {
         emit Paused(p);
     }
 
-    function updatePlatformFees(uint32 _hauskaFeePct, uint32 _integratorFeePct) external onlyAdmin {
-        if (_hauskaFeePct > 5000) revert HauskaFeeTooHigh();    // 50%
+    function updatePlatformFees(uint32 _EmpressaFeePct, uint32 _integratorFeePct) external onlyAdmin {
+        if (_EmpressaFeePct > 5000) revert EmpressaFeeTooHigh();    // 50%
         if (_integratorFeePct > 200) revert IntegratorFeeTooHigh(); // 2%
-        hauskaFeePct = _hauskaFeePct;
+        EmpressaFeePct = _EmpressaFeePct;
         integratorFeePct = _integratorFeePct;
-        emit PlatformFeesUpdated(_hauskaFeePct, _integratorFeePct);
+        emit PlatformFeesUpdated(_EmpressaFeePct, _integratorFeePct);
     }
 
     /* core flows */
@@ -235,8 +235,8 @@ contract HauskaContractFactoryLite {
 
     /* ===== Restored getters & helpers (for the dashboard/UI) ===== */
 
-    function getPlatformFees() external view returns (uint32 integratorFee, uint32 hauskaFee) {
-        return (integratorFeePct, hauskaFeePct);
+    function getPlatformFees() external view returns (uint32 integratorFee, uint32 EmpressaFee) {
+        return (integratorFeePct, EmpressaFeePct);
     }
 
     function getContract(address principal) external view returns (address) {

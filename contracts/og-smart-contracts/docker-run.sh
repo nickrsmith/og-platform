@@ -1,9 +1,9 @@
 #!/bin/bash
 
-echo "🐳 Hauska Smart Contracts - Docker Setup"
+echo "🐳 Empressa Smart Contracts - Docker Setup"
 echo "========================================"
 echo ""
-echo "This will build and run the Hauska platform with NFT License System"
+echo "This will build and run the Empressa platform with NFT License System"
 echo ""
 
 # Check if Docker is installed
@@ -37,15 +37,15 @@ echo "📊 Service Status:"
 docker-compose ps
 
 echo ""
-echo "✅ Hauska platform is running!"
+echo "✅ Empressa platform is running!"
 echo ""
 echo "🌐 Access Points:"
 echo "   Frontend: http://localhost:3000"
 echo "   Hardhat Node: http://localhost:8545"
 echo ""
 echo "📝 Useful Commands:"
-echo "   View logs: docker-compose logs -f hauska"
-echo "   Check NFTs: docker-compose exec hauska npx hardhat run scripts/check-nft-count.js --network localhost"
+echo "   View logs: docker-compose logs -f Empressa"
+echo "   Check NFTs: docker-compose exec Empressa npx hardhat run scripts/check-nft-count.js --network localhost"
 echo "   Stop services: docker-compose down"
 echo ""
 echo "🎫 NFT License System is active - each license purchase mints an ERC-721 NFT!"

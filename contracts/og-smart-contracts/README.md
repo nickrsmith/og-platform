@@ -1,10 +1,10 @@
 # O&G Smart Contracts
 
-**Status:** Base code copied from Hauska Smart Contracts - Ready for O&G adaptation
+**Status:** Base code copied from Empressa Smart Contracts - Ready for O&G adaptation
 
 ## Overview
 
-This repository contains Solidity smart contracts for the O&G platform, adapted from Hauska's smart contract system. It handles asset tokenization, transactions, and revenue distribution for O&G assets.
+This repository contains Solidity smart contracts for the O&G platform, adapted from Empressa's smart contract system. It handles asset tokenization, transactions, and revenue distribution for O&G assets.
 
 ## Tech Stack
 
@@ -15,7 +15,7 @@ This repository contains Solidity smart contracts for the O&G platform, adapted 
 
 ## Current Status
 
-✅ Base code copied from Hauska Smart Contracts  
+✅ Base code copied from Empressa Smart Contracts  
 🔄 Ready for O&G asset type adaptation  
 🔄 Ready for O&G transaction types  
 🔄 Ready for Category-specific contract logic  

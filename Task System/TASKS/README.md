@@ -6,7 +6,7 @@ This directory contains task tracking documents for the Empressa smart contract 
 
 ### 1. EMPRESSA_CONTRACT_MIGRATION_TASKS.md
 **Status:** In Progress  
-**Focus:** Migration from Hauska branding to Empressa Marketplace LLC
+**Focus:** Migration from Empressa branding to Empressa Marketplace LLC
 
 **Completed:**
 - ✅ Core revenue distributor contract

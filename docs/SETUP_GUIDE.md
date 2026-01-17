@@ -2,6 +2,8 @@
 
 Complete setup instructions for the O&G Platform application.
 
+*Last Updated: January 16, 2026*
+
 ## Prerequisites
 
 Install the following before starting:
@@ -38,12 +40,12 @@ Install the following before starting:
 
 ## Service Setup
 
-### Backend: OG Backend
+### Backend Services
 
-**Location:** `backend/og-backend/`
+**Location:** `backend/`
 
 ```bash
-cd backend/og-backend
+cd backend
 
 # Install dependencies
 pnpm install
@@ -66,73 +68,21 @@ pnpm start:dev
 ```
 
 **Services run on:**
-- Core API: http://localhost:3000
-- Admin Service: http://localhost:4242
+- Core API: http://localhost:3002
+- Admin Service: http://localhost:4243
 - KMS Service: http://localhost:3001
 - Blockchain Service: http://localhost:3003
 - IPFS Service: http://localhost:3004
 
-### Backend: OG Lens Platform
+**API Documentation:**
+- Swagger UI: http://localhost:3002/api/docs
 
-**Location:** `backend/og-lens-platform/`
+### Frontend Dashboard
 
-```bash
-cd backend/og-lens-platform
-
-# Install dependencies
-pnpm install
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your configuration
-# Note: Requires GH_PAT for private @hauska/lens-sdk package
-
-# Start infrastructure (PostgreSQL)
-docker-compose up -d
-
-# Generate Prisma client
-pnpm prisma generate
-
-# Run migrations
-docker-compose run migrations
-
-# Start services
-pnpm start:dev
-```
-
-**Services run on:**
-- Indexer API: http://localhost:4000
-- Lens Manager: http://localhost:4001
-
-### Backend: OG Data Room Backend
-
-**Location:** `backend/og-data-room-backend/`
+**Location:** `frontend/`
 
 ```bash
-cd backend/og-data-room-backend
-
-# Install dependencies
-go mod download
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your configuration
-
-# Start infrastructure (MongoDB, Redis)
-docker-compose up -d
-
-# Run the application
-go run main.go
-```
-
-**Service runs on:** http://localhost:8080
-
-### Frontend: OG Dashboard
-
-**Location:** `frontend/og-dashboard/`
-
-```bash
-cd frontend/og-dashboard
+cd frontend
 
 # Install dependencies
 npm install
@@ -144,45 +94,7 @@ npm install
 npm run dev
 ```
 
-**Application runs on:** http://localhost:5173 (or Vite default port)
-
-### Frontend: OG Data Room Frontend
-
-**Location:** `frontend/og-data-room-frontend/`
-
-```bash
-cd frontend/og-data-room-frontend
-
-# Install dependencies
-pnpm install  # or npm install
-
-# Configure environment (if needed)
-cp .env.example .env  # if exists
-
-# Start development server
-npm run dev
-```
-
-**Application runs on:** http://localhost:5173 (or Vite default port)
-
-### Frontend: OG Marketplace
-
-**Location:** `frontend/og-marketplace/`
-
-```bash
-cd frontend/og-marketplace
-
-# Install dependencies
-npm install
-
-# Configure environment (if needed)
-cp .env.example .env  # if exists
-
-# Start development server
-npm run dev
-```
-
-**Application runs on:** http://localhost:5173 (or Vite default port)
+**Application runs on:** http://localhost:5173 (or Vite default port, typically 5173)
 
 ## Environment Variables
 
@@ -193,18 +105,23 @@ Each service requires specific environment variables. See `.env.example` files i
 1. **AWS KMS**: For key management
 2. **Web3Auth**: For authentication
 3. **Ethereum RPC**: Blockchain endpoint
-4. **Database**: PostgreSQL (og-backend, og-lens-platform) or MongoDB (og-data-room-backend)
+4. **Database**: PostgreSQL (backend services)
 5. **Redis**: Caching and queues
-6. **RabbitMQ**: Message queue (og-backend only)
+6. **RabbitMQ**: Message queue (backend services)
 
 ## Troubleshooting
 
 ### Port Conflicts
 
 If ports are already in use:
-- **PostgreSQL**: og-backend uses 5432, og-lens-platform uses 5433
+- **PostgreSQL**: 5432 (backend services)
 - **Redis**: Default 6379 (check docker-compose files)
 - **RabbitMQ**: 5672 (AMQP), 15672 (Management UI)
+- **Core API**: 3002
+- **Admin Service**: 4243
+- **KMS Service**: 3001
+- **Blockchain Service**: 3003
+- **IPFS Service**: 3004
 
 ### Docker Issues
 

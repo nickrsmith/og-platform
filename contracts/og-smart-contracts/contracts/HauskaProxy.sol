@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/proxy/Proxy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract HauskaProxy is Proxy, ERC1967Upgrade, Initializable {
+contract EmpressaProxy is Proxy, ERC1967Upgrade, Initializable {
     address public admin;
     address public upgrader;
 

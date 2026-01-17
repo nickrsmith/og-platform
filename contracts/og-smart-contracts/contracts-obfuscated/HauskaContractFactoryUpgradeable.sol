@@ -65,7 +65,7 @@ library RoleWiringLib {
     }
 }
 
-contract HauskaContractFactoryUpgradeable is 
+contract EmpressaContractFactoryUpgradeable is 
     AccessControlUpgradeable, 
     PausableUpgradeable, 
     ReentrancyGuardUpgradeable, 
@@ -76,7 +76,7 @@ contract HauskaContractFactoryUpgradeable is
     error ModulesNotSet();
     error PrincipalHasContract();
     error InvalidContract();
-    error HauskaFeeTooHigh();
+    error EmpressaFeeTooHigh();
     error IntegratorFeeTooHigh();
     
     bytes32 public constant _cb4091d = keccak256("_cb4091d");
@@ -199,14 +199,14 @@ contract HauskaContractFactoryUpgradeable is
         emit _eaa34cc(_vcfebb0, _v9d7695);
     }
 
-    function _f9d3018(uint32 _hauskaFee, uint32 _integratorFee) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_hauskaFee <= 5000, "Hauska _v9c15cd too high"); 
+    function _f9d3018(uint32 _EmpressaFee, uint32 _integratorFee) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_EmpressaFee <= 5000, "Empressa _v9c15cd too high"); 
         require(_integratorFee <= 200, "Integrator _v9c15cd too high"); 
 
-        _v3d6202 = _hauskaFee;
+        _v3d6202 = _EmpressaFee;
         _v3055c2 = _integratorFee;
 
-        emit _e18858a(_hauskaFee, _integratorFee);
+        emit _e18858a(_EmpressaFee, _integratorFee);
     }
 
     function _f84a41b() external view returns (address, address, address, address, address) {

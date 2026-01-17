@@ -1,4 +1,4 @@
-# Docker Setup for Hauska Smart Contracts
+# Docker Setup for Empressa Smart Contracts
 
 This project includes Docker support for easy deployment and development with the NFT License System.
 
@@ -49,10 +49,10 @@ docker-compose up --build
 
 ## Services
 
-### Main Service (`hauska`)
+### Main Service (`Empressa`)
 
 - Runs Hardhat node, deploys contracts, and serves frontend
-- Includes NFT License System (HauskaLicenseManagerV2)
+- Includes NFT License System (EmpressaLicenseManagerV2)
 - Automatically sets up permissions for NFT minting
 
 ### Optional Services
@@ -72,25 +72,25 @@ docker-compose up -d
 ### View logs
 
 ```bash
-docker-compose logs -f hauska
+docker-compose logs -f Empressa
 ```
 
 ### Check NFT count
 
 ```bash
-docker-compose exec hauska npx hardhat run scripts/check-nft-count.js --network localhost
+docker-compose exec Empressa npx hardhat run scripts/check-nft-count.js --network localhost
 ```
 
 ### Deploy contracts manually
 
 ```bash
-docker-compose exec hauska npx hardhat run scripts/deploy-complete.js --network localhost
+docker-compose exec Empressa npx hardhat run scripts/deploy-complete.js --network localhost
 ```
 
 ### Access Hardhat console
 
 ```bash
-docker-compose exec hauska npx hardhat console --network localhost
+docker-compose exec Empressa npx hardhat console --network localhost
 ```
 
 ### Stop all services
@@ -134,7 +134,7 @@ HARDHAT_NETWORK=localhost
 
 The Docker deployment automatically:
 
-- Deploys HauskaLicenseManagerV2 (NFT-based licenses)
+- Deploys EmpressaLicenseManagerV2 (NFT-based licenses)
 - Sets up all required permissions
 - Configures the factory to use NFT licenses by default
 
@@ -159,30 +159,30 @@ ports:
 
 ```bash
 # Check logs
-docker-compose logs hauska
+docker-compose logs Empressa
 
 # Manually deploy
-docker-compose exec hauska sh -c "cd /app && npx hardhat run scripts/deploy-complete.js --network localhost"
+docker-compose exec Empressa sh -c "cd /app && npx hardhat run scripts/deploy-complete.js --network localhost"
 ```
 
 ### Permission errors
 
 ```bash
 # Fix NFT permissions
-docker-compose exec hauska npx hardhat run scripts/fix-permissions.js --network localhost
+docker-compose exec Empressa npx hardhat run scripts/fix-permissions.js --network localhost
 ```
 
 ## Architecture
 
 ```bash
-hauska-platform/
+Empressa-platform/
 ├── Hardhat Node (port 8545)
 ├── Contract Deployer
 ├── Frontend Server (port 80/3000)
 └── NFT License System
-    ├── HauskaLicenseManagerV2
-    ├── HauskaLicenseNFT (ERC-721)
-    └── HauskaLicenseMetadata
+    ├── EmpressaLicenseManagerV2
+    ├── EmpressaLicenseNFT (ERC-721)
+    └── EmpressaLicenseMetadata
 ```
 
 ## Contract Addresses

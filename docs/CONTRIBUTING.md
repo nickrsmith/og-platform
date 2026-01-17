@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to the O&G Platform!
 
+*Last Updated: January 16, 2026*
+
 ## Development Setup
 
 1. Follow the [Setup Guide](./SETUP_GUIDE.md) to get the development environment running

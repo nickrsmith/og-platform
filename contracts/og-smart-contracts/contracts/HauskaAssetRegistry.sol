@@ -2,17 +2,17 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IHauskaStructs.sol";
-import "./interfaces/IHauskaContracts.sol";
-import "./HauskaAssetNFT.sol";
+import "./interfaces/IEmpressaStructs.sol";
+import "./interfaces/IEmpressaContracts.sol";
+import "./EmpressaAssetNFT.sol";
 
-contract HauskaAssetRegistry is AccessControl, IHauskaStructs {
+contract EmpressaAssetRegistry is AccessControl, IEmpressaStructs {
     bytes32 public constant REGISTRY_ADMIN_ROLE = keccak256("REGISTRY_ADMIN_ROLE");
     bytes32 public constant ORG_CONTRACT_ROLE = keccak256("ORG_CONTRACT_ROLE");
     bytes32 public constant AUTHORIZED_CONTRACT_ROLE = keccak256("AUTHORIZED_CONTRACT_ROLE");
     
     // Asset NFT contract
-    HauskaAssetNFT public assetNFT;
+    EmpressaAssetNFT public assetNFT;
     
     // Global asset tracking
     mapping(bytes32 => bool) public globalAssetHashExists;
@@ -64,7 +64,7 @@ contract HauskaAssetRegistry is AccessControl, IHauskaStructs {
     
     function setAssetNFT(address _assetNFT) external onlyRole(REGISTRY_ADMIN_ROLE) {
         require(_assetNFT != address(0), "Invalid NFT contract address");
-        assetNFT = HauskaAssetNFT(_assetNFT);
+        assetNFT = EmpressaAssetNFT(_assetNFT);
     }
     
     function addOrgContract(address orgContract) external onlyRole(REGISTRY_ADMIN_ROLE) {
@@ -140,8 +140,8 @@ contract HauskaAssetRegistry is AccessControl, IHauskaStructs {
         uint256 assetId
     ) external view returns (VerifiedDigitalAsset memory) {
         VerifiedDigitalAsset memory asset = assets[orgContract][assetId];
-        (uint32 hauskaFeePct, uint32 integratorFeePct) = IHauskaRevenueDistributor(IHauskaOrgContract(orgContract).revenueDistributor()).getCustomFees(orgContract);
-        asset.price = asset.price * (10000 + hauskaFeePct + integratorFeePct) / 10000;
+        (uint32 EmpressaFeePct, uint32 integratorFeePct) = IEmpressaRevenueDistributor(IEmpressaOrgContract(orgContract).revenueDistributor()).getCustomFees(orgContract);
+        asset.price = asset.price * (10000 + EmpressaFeePct + integratorFeePct) / 10000;
         return asset;
     }
     
@@ -270,7 +270,7 @@ contract HauskaAssetRegistry is AccessControl, IHauskaStructs {
         
         // Verify caller has permission (must be principal of source org)
         require(
-            IHauskaOrgContract(fromOrg).hasRole(keccak256("PRINCIPAL_ROLE"), curOwner),
+            IEmpressaOrgContract(fromOrg).hasRole(keccak256("PRINCIPAL_ROLE"), curOwner),
             "Only principal can transfer cross-org"
         );
         
@@ -282,7 +282,7 @@ contract HauskaAssetRegistry is AccessControl, IHauskaStructs {
         newAsset.assetId = newAssetId;
         newAsset.creator = sourceAsset.creator; // Preserve original creator
         newAsset.owner = newOwner; // New owner in destination org
-        newAsset.partner = IHauskaOrgContract(toOrg).integrationPartner();
+        newAsset.partner = IEmpressaOrgContract(toOrg).integrationPartner();
         newAsset.ipfsHash = sourceAsset.ipfsHash;
         newAsset.metadataHash = sourceAsset.metadataHash;
         newAsset.assetHash = sourceAsset.assetHash;

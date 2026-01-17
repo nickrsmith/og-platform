@@ -2,10 +2,10 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IHauskaStructs.sol";
-import "./interfaces/IHauskaContracts.sol";
+import "./interfaces/IEmpressaStructs.sol";
+import "./interfaces/IEmpressaContracts.sol";
 
-contract HauskaOrgContract is AccessControl, IHauskaStructs {
+contract EmpressaOrgContract is AccessControl, IEmpressaStructs {
     
     bytes32 public constant PRINCIPAL_ROLE = keccak256("PRINCIPAL_ROLE");
     bytes32 public constant CREATOR_ROLE = keccak256("CREATOR_ROLE");
@@ -171,7 +171,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         });
         
         // Register with AssetRegistry
-        uint256 assetId = IHauskaAssetRegistry(assetRegistry).registerAsset(newAsset, msg.sender);
+        uint256 assetId = IEmpressaAssetRegistry(assetRegistry).registerAsset(newAsset, msg.sender);
         
         return assetId;
     }
@@ -182,10 +182,10 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
      * @return creatorAmount The amount the creator will receive after fees
      */
     function calculateCreatorAmount(uint256 grossPrice) public view returns (uint256) {
-        (uint32 integratorFeePct, uint32 hauskaFeePct) = IHauskaContractFactory(factory).getPlatformFees();
+        (uint32 integratorFeePct, uint32 EmpressaFeePct) = IEmpressaContractFactory(factory).getPlatformFees();
         
         // Calculate total fee percentage (both fees are in basis points, so 10000 = 100%)
-        uint256 totalFeePct = uint256(integratorFeePct) + uint256(hauskaFeePct);
+        uint256 totalFeePct = uint256(integratorFeePct) + uint256(EmpressaFeePct);
         
         // Creator receives: grossPrice * (10000 - totalFeePct) / 10000
         uint256 creatorAmount = grossPrice * 10000 / (10000 + totalFeePct);
@@ -199,10 +199,10 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
      * @return grossPrice The total price including all fees
      */
     function calculateGrossPrice(uint256 creatorAmount) public view returns (uint256) {
-        (uint32 integratorFeePct, uint32 hauskaFeePct) = IHauskaContractFactory(factory).getPlatformFees();
+        (uint32 integratorFeePct, uint32 EmpressaFeePct) = IEmpressaContractFactory(factory).getPlatformFees();
         
         // Calculate total fee percentage
-        uint256 totalFeePct = uint256(integratorFeePct) + uint256(hauskaFeePct);
+        uint256 totalFeePct = uint256(integratorFeePct) + uint256(EmpressaFeePct);
         
         // Gross price = creatorAmount * (10000 + totalFeePct) / 10000
         uint256 grossPrice = creatorAmount * (10000 + totalFeePct) / 10000;
@@ -219,7 +219,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
             "Unauthorized access"
         );
         
-        VerifiedDigitalAsset memory asset = IHauskaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
+        VerifiedDigitalAsset memory asset = IEmpressaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
         return (asset.ipfsHash, asset.metadataHash);
     }
     
@@ -227,14 +227,14 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(assetRegistry != address(0), "Asset registry not set");
         
         // Delegate to AssetRegistry
-        IHauskaAssetRegistry(assetRegistry).verifyAsset(address(this), assetId, msg.sender);
+        IEmpressaAssetRegistry(assetRegistry).verifyAsset(address(this), assetId, msg.sender);
     }
 
     function unverifyAsset(uint256 assetId) external onlyPrincipalOrAdmin {
         require(assetRegistry != address(0), "Asset registry not set");
         
         // Delegate to AssetRegistry
-        IHauskaAssetRegistry(assetRegistry).unverifyAsset(address(this), assetId);
+        IEmpressaAssetRegistry(assetRegistry).unverifyAsset(address(this), assetId);
     }
     
     function createGroup(
@@ -248,7 +248,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(isOrganizationMember(msg.sender), "Caller is not a member of the organization");
         
         // Delegate to GroupManager
-        return IHauskaGroupManager(groupManager).createGroup(
+        return IEmpressaGroupManager(groupManager).createGroup(
             groupName,
             groupAssets,
             groupPrice,
@@ -260,7 +260,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(groupManager != address(0), "Group manager not set");
 
         // Delegate to GroupManager
-        IHauskaGroupManager(groupManager).removeGroup(groupId, msg.sender);
+        IEmpressaGroupManager(groupManager).removeGroup(groupId, msg.sender);
     }
     
     function licenseAsset(
@@ -272,11 +272,11 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(assetRegistry != address(0), "Asset registry not set");
 
         // Verify asset exists and is valid
-        VerifiedDigitalAsset memory asset = IHauskaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
+        VerifiedDigitalAsset memory asset = IEmpressaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
         require(asset.assetId > 0, "Invalid asset ID");
 
         // Delegate to license manager
-        return IHauskaLicenseManager(licenseManager).licenseAsset(
+        return IEmpressaLicenseManager(licenseManager).licenseAsset(
             address(this),
             assetId,
             msg.sender,
@@ -294,11 +294,11 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(groupManager != address(0), "Group manager not set");
 
         // Verify group exists and is valid
-        AssetGroup memory group = IHauskaGroupManager(groupManager).getGroup(address(this), groupId);
+        AssetGroup memory group = IEmpressaGroupManager(groupManager).getGroup(address(this), groupId);
         require(group.groupId > 0, "Invalid group ID");
 
         // Delegate to license manager
-        return IHauskaLicenseManager(licenseManager).licenseGroup(
+        return IEmpressaLicenseManager(licenseManager).licenseGroup(
             address(this),
             groupId,
             msg.sender,
@@ -314,7 +314,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         FxPool, string memory
     ) {
         require(assetRegistry != address(0), "Asset registry not set");
-        VerifiedDigitalAsset memory asset = IHauskaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
+        VerifiedDigitalAsset memory asset = IEmpressaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
 
         return (
             asset.assetId,
@@ -338,7 +338,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     
     function isValidAsset(uint256 assetId) external view returns (bool) {
         require(assetRegistry != address(0), "Asset registry not set");
-        try IHauskaAssetRegistry(assetRegistry).getAsset(address(this), assetId) returns (VerifiedDigitalAsset memory asset) {
+        try IEmpressaAssetRegistry(assetRegistry).getAsset(address(this), assetId) returns (VerifiedDigitalAsset memory asset) {
             return asset.assetId != 0;
         } catch {
             return false;
@@ -347,7 +347,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     
     function getAssetCount() external view returns (uint256) {
         require(assetRegistry != address(0), "Asset registry not set");
-        return IHauskaAssetRegistry(assetRegistry).assetCounter(address(this));
+        return IEmpressaAssetRegistry(assetRegistry).assetCounter(address(this));
     }
     
     function transferAsset(uint256 assetId, address newOwner) external {
@@ -355,7 +355,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(newOwner != address(0), "Invalid new owner");
 
         // Get asset and verify caller ownership
-        VerifiedDigitalAsset memory asset = IHauskaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
+        VerifiedDigitalAsset memory asset = IEmpressaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
         require(asset.owner == msg.sender, "Only asset owner can transfer");
 
         // Ensure new owner is part of the organization
@@ -363,13 +363,13 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
 
         // Remove asset from all groups before transferring ownership
         if (groupManager != address(0)) {
-            IHauskaGroupManager(groupManager).removeAssetFromAllGroups(address(this), assetId, false);
+            IEmpressaGroupManager(groupManager).removeAssetFromAllGroups(address(this), assetId, false);
         }
 
         // Proceed only if the NFT exists
-        address assetNFTAddress = IHauskaAssetRegistry(assetRegistry).assetNFTAddress();
+        address assetNFTAddress = IEmpressaAssetRegistry(assetRegistry).assetNFTAddress();
         if (assetNFTAddress != address(0)) {
-            IHauskaAssetNFT assetNFT = IHauskaAssetNFT(assetNFTAddress);
+            IEmpressaAssetNFT assetNFT = IEmpressaAssetNFT(assetNFTAddress);
 
             // Check NFT existence and fetch tokenId
             if (assetNFT.assetHasNFT(address(this), assetId)) {
@@ -384,7 +384,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
                 );
 
                 // Update ownership and transfer NFT
-                IHauskaAssetRegistry(assetRegistry).transferAssetOwnership(address(this), assetId, newOwner, msg.sender);
+                IEmpressaAssetRegistry(assetRegistry).transferAssetOwnership(address(this), assetId, newOwner, msg.sender);
                 assetNFT.safeTransferFrom(tokenOwner, newOwner, tokenId);
             }
             else {
@@ -413,23 +413,23 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(newOwner != address(0), "Invalid new owner");
 
         require(
-            IHauskaContractFactory(factory).isValidOrgContract(toOrg),
+            IEmpressaContractFactory(factory).isValidOrgContract(toOrg),
             "Destination is not a valid org contract"
         );
         require(
-            IHauskaOrgContract(toOrg).isOrganizationMember(newOwner),
+            IEmpressaOrgContract(toOrg).isOrganizationMember(newOwner),
             "New owner must be a member of the destination organization"
         );
 
-        VerifiedDigitalAsset memory asset = IHauskaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
+        VerifiedDigitalAsset memory asset = IEmpressaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
         require(asset.owner == msg.sender, "Only asset owner can transfer");
 
         // Remove asset from all groups before transferring cross-org
         if (groupManager != address(0)) {
-            IHauskaGroupManager(groupManager).removeAssetFromAllGroups(address(this), assetId, true);
+            IEmpressaGroupManager(groupManager).removeAssetFromAllGroups(address(this), assetId, true);
         }
 
-        uint256 newAssetId = IHauskaAssetRegistry(assetRegistry).transferAssetCrossOrg(
+        uint256 newAssetId = IEmpressaAssetRegistry(assetRegistry).transferAssetCrossOrg(
             address(this),
             toOrg,
             assetId,
@@ -437,11 +437,11 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
             newOwner
         );
 
-        address assetNFTAddress = IHauskaAssetRegistry(assetRegistry).assetNFTAddress();
+        address assetNFTAddress = IEmpressaAssetRegistry(assetRegistry).assetNFTAddress();
         bool didBurn = false;
 
         if (assetNFTAddress != address(0)) {
-            IHauskaAssetNFT assetNFT = IHauskaAssetNFT(assetNFTAddress);
+            IEmpressaAssetNFT assetNFT = IEmpressaAssetNFT(assetNFTAddress);
             if (assetNFT.assetHasNFT(address(this), assetId)) {
                 uint256 tokenId = assetNFT.getTokenIdForAsset(address(this), assetId);
                 address tokenOwner = assetNFT.ownerOf(tokenId);
@@ -460,7 +460,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
 
         // Update all the assetIds(reduced by 1 between assetId and length of assets in the current org) in the orgGroups.members after transfer asset cross org
         if (groupManager != address(0)) {
-            IHauskaGroupManager(groupManager).updateAssetIdsInGroups(address(this), assetId);
+            IEmpressaGroupManager(groupManager).updateAssetIdsInGroups(address(this), assetId);
         }
 
         emit AssetTransferredCrossOrg(assetId, toOrg, newAssetId, newOwner);
@@ -472,7 +472,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     // Helper function to get the USDC token address for approvals
     function getUSDCToken() external view returns (address) {
         require(licenseManager != address(0), "License manager not set");
-        return IHauskaLicenseManager(licenseManager).usdcToken();
+        return IEmpressaLicenseManager(licenseManager).usdcToken();
     }
     
     // Helper function to get required approval amount for licensing
@@ -480,7 +480,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(licenseManager != address(0), "License manager not set");
         require(assetRegistry != address(0), "Asset registry not set");
         
-        VerifiedDigitalAsset memory asset = IHauskaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
+        VerifiedDigitalAsset memory asset = IEmpressaAssetRegistry(assetRegistry).getAsset(address(this), assetId);
         require(asset.assetId > 0, "Invalid asset ID");
         
         return (licenseManager, asset.price);
@@ -491,7 +491,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(licenseManager != address(0), "License manager not set");
         require(groupManager != address(0), "Group manager not set");
         
-        AssetGroup memory group = IHauskaGroupManager(groupManager).getGroup(address(this), groupId);
+        AssetGroup memory group = IEmpressaGroupManager(groupManager).getGroup(address(this), groupId);
         require(group.groupId > 0, "Invalid group ID");
         
         return (licenseManager, group.groupPrice);
@@ -513,12 +513,12 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     function getAssetsByOwner(address owner) external view returns (uint256[] memory) {
         require(assetRegistry != address(0), "Asset registry not set");
         
-        uint256 assetCount = IHauskaAssetRegistry(assetRegistry).getAssetCount(address(this));
+        uint256 assetCount = IEmpressaAssetRegistry(assetRegistry).getAssetCount(address(this));
         uint256[] memory ownedAssets = new uint256[](assetCount);
         uint256 ownedCount = 0;
         
         for (uint256 i = 1; i <= assetCount; i++) {
-            VerifiedDigitalAsset memory asset = IHauskaAssetRegistry(assetRegistry).getAsset(address(this), i);
+            VerifiedDigitalAsset memory asset = IEmpressaAssetRegistry(assetRegistry).getAsset(address(this), i);
             if (asset.owner == owner) {
                 ownedAssets[ownedCount] = i;
                 ownedCount++;
@@ -537,17 +537,17 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     function getAssetGroupsByOwner(address owner) external view returns (uint256[] memory) {
         require(groupManager != address(0), "Group manager not set");
         
-        uint256 groupCount = IHauskaGroupManager(groupManager).getGroupCount(address(this));
+        uint256 groupCount = IEmpressaGroupManager(groupManager).getGroupCount(address(this));
         uint256[] memory ownedGroups = new uint256[](groupCount);
         uint256 ownedCount = 0;
         
         for (uint256 i = 1; i <= groupCount; i++) {
-            AssetGroup memory group = IHauskaGroupManager(groupManager).getGroup(address(this), i);
+            AssetGroup memory group = IEmpressaGroupManager(groupManager).getGroup(address(this), i);
             
             // Check if the owner owns all assets in the group
             bool ownsAllAssets = true;
             for (uint256 j = 0; j < group.members.length; j++) {
-                VerifiedDigitalAsset memory asset = IHauskaAssetRegistry(assetRegistry).getAsset(address(this), group.members[j]);
+                VerifiedDigitalAsset memory asset = IEmpressaAssetRegistry(assetRegistry).getAsset(address(this), group.members[j]);
                 if (asset.owner != owner) {
                     ownsAllAssets = false;
                     break;

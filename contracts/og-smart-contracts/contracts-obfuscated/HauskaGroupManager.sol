@@ -2,15 +2,15 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IHauskaStructs.sol";
-import "./interfaces/IHauskaContracts.sol";
+import "./interfaces/IEmpressaStructs.sol";
+import "./interfaces/IEmpressaContracts.sol";
 
 interface IAssetRegistry {
     function _fc9b17f(address _v3030a8, uint256 _v9d8e96) external view returns (bool);
-    function _f57ca34(address _v3030a8, uint256 _v9d8e96) external view returns (IHauskaStructs.VerifiedDigitalAsset memory);
+    function _f57ca34(address _v3030a8, uint256 _v9d8e96) external view returns (IEmpressaStructs.VerifiedDigitalAsset memory);
 }
 
-contract HauskaGroupManager is AccessControl, IHauskaStructs {
+contract EmpressaGroupManager is AccessControl, IEmpressaStructs {
     bytes32 public constant _c5ed259 = keccak256("_c5ed259");
     bytes32 public constant _cc9dbe0 = keccak256("_cc9dbe0");
     
@@ -90,7 +90,7 @@ contract HauskaGroupManager is AccessControl, IHauskaStructs {
                 "All _f3685e3 must be verified"
             );
             
-            IHauskaStructs.VerifiedDigitalAsset memory _v64292b = IAssetRegistry(_v9b2fda)._f57ca34(_v3030a8, assetIds[_v042dc4]);
+            IEmpressaStructs.VerifiedDigitalAsset memory _v64292b = IAssetRegistry(_v9b2fda)._f57ca34(_v3030a8, assetIds[_v042dc4]);
             require(_v64292b._v579233 == _vca0dd8, "Creator must own all assets in the group");
         }
         
@@ -180,7 +180,7 @@ contract HauskaGroupManager is AccessControl, IHauskaStructs {
         uint256 _vd6b1fa
     ) external view returns (AssetGroup memory) {
         AssetGroup memory _v64292b = orgGroups[_v3030a8][_vd6b1fa];
-        (uint32 _v7c582f, uint32 _vcaab70c) = IHauskaRevenueDistributor(IHauskaOrgContract(_v3030a8)._vedea5b())._f434c53(_v3030a8);
+        (uint32 _v7c582f, uint32 _vcaab70c) = IEmpressaRevenueDistributor(IEmpressaOrgContract(_v3030a8)._vedea5b())._f434c53(_v3030a8);
         _v64292b._v2459dc = _v64292b._v2459dc * (10000 + _v7c582f + _vcaab70c) / 10000;
         return _v64292b;
     }

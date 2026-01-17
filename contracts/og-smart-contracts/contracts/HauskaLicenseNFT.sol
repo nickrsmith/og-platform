@@ -7,18 +7,18 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./interfaces/IHauskaStructs.sol";
+import "./interfaces/IEmpressaStructs.sol";
 
-interface IHauskaLicenseMetadata {
+interface IEmpressaLicenseMetadata {
     function tokenURI(uint256 tokenId) external view returns (string memory);
 }
 
 /**
- * @title HauskaLicenseNFT
- * @dev ERC-721 based license management system for Hauska platform
+ * @title EmpressaLicenseNFT
+ * @dev ERC-721 based license management system for Empressa platform
  * Each license is represented as an NFT that can be transferred and traded
  */
-contract HauskaLicenseNFT is ERC721, ERC721Enumerable, ERC721URIStorage, AccessControl, Pausable {
+contract EmpressaLicenseNFT is ERC721, ERC721Enumerable, ERC721URIStorage, AccessControl, Pausable {
     using Counters for Counters.Counter;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -66,7 +66,7 @@ contract HauskaLicenseNFT is ERC721, ERC721Enumerable, ERC721URIStorage, AccessC
     event LicenseRevoked(uint256 indexed tokenId);
     event LicenseExpired(uint256 indexed tokenId);
 
-    constructor() ERC721("Hauska License", "HLICENSE") {
+    constructor() ERC721("Empressa License", "HLICENSE") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
@@ -291,7 +291,7 @@ contract HauskaLicenseNFT is ERC721, ERC721Enumerable, ERC721URIStorage, AccessC
         
         // If metadata contract is set, use it
         if (metadataContract != address(0)) {
-            try IHauskaLicenseMetadata(metadataContract).tokenURI(tokenId) returns (string memory uri) {
+            try IEmpressaLicenseMetadata(metadataContract).tokenURI(tokenId) returns (string memory uri) {
                 return uri;
             } catch {
                 // Fall back to stored URI

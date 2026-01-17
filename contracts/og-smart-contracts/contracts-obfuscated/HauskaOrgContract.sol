@@ -2,10 +2,10 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IHauskaStructs.sol";
-import "./interfaces/IHauskaContracts.sol";
+import "./interfaces/IEmpressaStructs.sol";
+import "./interfaces/IEmpressaContracts.sol";
 
-contract HauskaOrgContract is AccessControl, IHauskaStructs {
+contract EmpressaOrgContract is AccessControl, IEmpressaStructs {
     
     bytes32 public constant _c1522a0 = keccak256("_c1522a0");
     bytes32 public constant _c887dee = keccak256("_c887dee");
@@ -164,14 +164,14 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
             _v0c96e3: geoRestrictions
         });
         
-        uint256 _v9d8e96 = IHauskaAssetRegistry(_v9b2fda)._fcf0c01(_vd5c3e4, msg.sender);
+        uint256 _v9d8e96 = IEmpressaAssetRegistry(_v9b2fda)._fcf0c01(_vd5c3e4, msg.sender);
         
         return _v9d8e96;
     }
     
     
     function _f5ad36e(uint256 _v4278d0) public view returns (uint256) {
-        (uint32 _v3055c2, uint32 _v3d6202) = IHauskaContractFactory(_v7b202d)._f6ede20();
+        (uint32 _v3055c2, uint32 _v3d6202) = IEmpressaContractFactory(_v7b202d)._f6ede20();
         uint256 _v2bfbf4 = uint256(_v3055c2) + uint256(_v3d6202);
         uint256 _v9640b5 = _v4278d0 * 10000 / (10000 + _v2bfbf4);
         
@@ -180,7 +180,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     
     
     function _f536eb4(uint256 _v9640b5) public view returns (uint256) {
-        (uint32 _v3055c2, uint32 _v3d6202) = IHauskaContractFactory(_v7b202d)._f6ede20();
+        (uint32 _v3055c2, uint32 _v3d6202) = IEmpressaContractFactory(_v7b202d)._f6ede20();
         uint256 _v2bfbf4 = uint256(_v3055c2) + uint256(_v3d6202);
         uint256 _v4278d0 = _v9640b5 * (10000 + _v2bfbf4) / 10000;
         
@@ -196,18 +196,18 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
             "Unauthorized access"
         );
         
-        VerifiedDigitalAsset memory _v05fac9 = IHauskaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
+        VerifiedDigitalAsset memory _v05fac9 = IEmpressaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
         return (_v05fac9._vc6ec61, _v05fac9._vfd7108);
     }
     
     function _f4a3d1f(uint256 _v9d8e96) external _m191797 {
         require(_v9b2fda != address(0), "Asset registry not set");
-        IHauskaAssetRegistry(_v9b2fda)._f4a3d1f(address(this), _v9d8e96, msg.sender);
+        IEmpressaAssetRegistry(_v9b2fda)._f4a3d1f(address(this), _v9d8e96, msg.sender);
     }
 
     function _fd7a077(uint256 _v9d8e96) external _mc67bac {
         require(_v9b2fda != address(0), "Asset registry not set");
-        IHauskaAssetRegistry(_v9b2fda)._fd7a077(address(this), _v9d8e96);
+        IEmpressaAssetRegistry(_v9b2fda)._fd7a077(address(this), _v9d8e96);
     }
     
     function _ff1bf61(
@@ -220,7 +220,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(_v2459dc > 0, "Group price must be greater than 0");
         require(_f07ee68(msg.sender), "Caller is not a member of the organization");
 
-        return IHauskaGroupManager(_v45f631)._ff1bf61(
+        return IEmpressaGroupManager(_v45f631)._ff1bf61(
             groupName,
             groupAssets,
             _v2459dc,
@@ -231,7 +231,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     function _faeb40b(uint256 _vd6b1fa) external _m3d894e {
         require(_v45f631 != address(0), "Group manager not set");
 
-        IHauskaGroupManager(_v45f631)._faeb40b(_vd6b1fa, msg.sender);
+        IEmpressaGroupManager(_v45f631)._faeb40b(_vd6b1fa, msg.sender);
     }
     
     function _f2df134(
@@ -242,10 +242,10 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(_vd0b565 != address(0), "License manager not set");
         require(_v9b2fda != address(0), "Asset registry not set");
 
-        VerifiedDigitalAsset memory _v05fac9 = IHauskaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
+        VerifiedDigitalAsset memory _v05fac9 = IEmpressaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
         require(_v05fac9._v9d8e96 > 0, "Invalid _v05fac9 ID");
 
-        return IHauskaLicenseManager(_vd0b565)._f2df134(
+        return IEmpressaLicenseManager(_vd0b565)._f2df134(
             address(this),
             _v9d8e96,
             msg.sender,
@@ -262,10 +262,10 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(_vd0b565 != address(0), "License manager not set");
         require(_v45f631 != address(0), "Group manager not set");
 
-        AssetGroup memory _v64292b = IHauskaGroupManager(_v45f631)._f624914(address(this), _vd6b1fa);
+        AssetGroup memory _v64292b = IEmpressaGroupManager(_v45f631)._f624914(address(this), _vd6b1fa);
         require(_v64292b._vd6b1fa > 0, "Invalid _v64292b ID");
 
-        return IHauskaLicenseManager(_vd0b565)._fbcc39b(
+        return IEmpressaLicenseManager(_vd0b565)._fbcc39b(
             address(this),
             _vd6b1fa,
             msg.sender,
@@ -281,7 +281,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         FxPool, string memory
     ) {
         require(_v9b2fda != address(0), "Asset registry not set");
-        VerifiedDigitalAsset memory _v05fac9 = IHauskaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
+        VerifiedDigitalAsset memory _v05fac9 = IEmpressaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
 
         return (
             _v05fac9._v9d8e96,
@@ -305,7 +305,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     
     function _fb32b66(uint256 _v9d8e96) external view returns (bool) {
         require(_v9b2fda != address(0), "Asset registry not set");
-        try IHauskaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96) returns (VerifiedDigitalAsset memory _v05fac9) {
+        try IEmpressaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96) returns (VerifiedDigitalAsset memory _v05fac9) {
             return _v05fac9._v9d8e96 != 0;
         } catch {
             return false;
@@ -314,26 +314,26 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     
     function _f49b5a2() external view returns (uint256) {
         require(_v9b2fda != address(0), "Asset registry not set");
-        return IHauskaAssetRegistry(_v9b2fda)._fd190ab(address(this));
+        return IEmpressaAssetRegistry(_v9b2fda)._fd190ab(address(this));
     }
     
     function _f0d6aeb(uint256 _v9d8e96, address newOwner) external {
         require(_v9b2fda != address(0), "Asset registry not set");
         require(newOwner != address(0), "Invalid new _v579233");
 
-        VerifiedDigitalAsset memory _v05fac9 = IHauskaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
+        VerifiedDigitalAsset memory _v05fac9 = IEmpressaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
         require(_v05fac9._v579233 == msg.sender, "Only _v05fac9 _v579233 can transfer");
 
         
         require(_f07ee68(newOwner), "New _v579233 must be a member of the organization");
 
         if (_v45f631 != address(0)) {
-            IHauskaGroupManager(_v45f631)._f8c7d3e(address(this), _v9d8e96);
+            IEmpressaGroupManager(_v45f631)._f8c7d3e(address(this), _v9d8e96);
         }
 
-        address _v794de2 = IHauskaAssetRegistry(_v9b2fda)._v794de2();
+        address _v794de2 = IEmpressaAssetRegistry(_v9b2fda)._v794de2();
         if (_v794de2 != address(0)) {
-            IHauskaAssetNFT _vde4409 = IHauskaAssetNFT(_v794de2);
+            IEmpressaAssetNFT _vde4409 = IEmpressaAssetNFT(_v794de2);
 
             if (_vde4409._fbfb963(address(this), _v9d8e96)) {
                 uint256 _va95b9f = _vde4409._f3d0e84(address(this), _v9d8e96);
@@ -346,7 +346,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
                     "Contract not approved to transfer token"
                 );
 
-                IHauskaAssetRegistry(_v9b2fda)._fcafa39(address(this), _v9d8e96, newOwner, msg.sender);
+                IEmpressaAssetRegistry(_v9b2fda)._fcafa39(address(this), _v9d8e96, newOwner, msg.sender);
                 _vde4409.safeTransferFrom(_v0be580, newOwner, _va95b9f);
             }
             else {
@@ -368,23 +368,23 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(newOwner != address(0), "Invalid new _v579233");
 
         require(
-            IHauskaContractFactory(_v7b202d)._f4e55c4(toOrg),
+            IEmpressaContractFactory(_v7b202d)._f4e55c4(toOrg),
             "Destination is not a valid _vd23b59 contract"
         );
         require(
-            IHauskaOrgContract(toOrg)._f07ee68(newOwner),
+            IEmpressaOrgContract(toOrg)._f07ee68(newOwner),
             "New _v579233 must be a member of the destination organization"
         );
 
-        VerifiedDigitalAsset memory _v05fac9 = IHauskaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
+        VerifiedDigitalAsset memory _v05fac9 = IEmpressaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
         require(_v05fac9._v579233 == msg.sender, "Only _v05fac9 _v579233 can transfer");
 
         // Remove asset from all groups before transferring cross-org
         if (_v45f631 != address(0)) {
-            IHauskaGroupManager(_v45f631)._f8c7d3e(address(this), _v9d8e96);
+            IEmpressaGroupManager(_v45f631)._f8c7d3e(address(this), _v9d8e96);
         }
 
-        uint256 _v0366cb = IHauskaAssetRegistry(_v9b2fda)._f938eee(
+        uint256 _v0366cb = IEmpressaAssetRegistry(_v9b2fda)._f938eee(
             address(this),
             toOrg,
             _v9d8e96,
@@ -392,11 +392,11 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
             newOwner
         );
 
-        address _v794de2 = IHauskaAssetRegistry(_v9b2fda)._v794de2();
+        address _v794de2 = IEmpressaAssetRegistry(_v9b2fda)._v794de2();
         bool _v2383ce = false;
 
         if (_v794de2 != address(0)) {
-            IHauskaAssetNFT _vde4409 = IHauskaAssetNFT(_v794de2);
+            IEmpressaAssetNFT _vde4409 = IEmpressaAssetNFT(_v794de2);
             if (_vde4409._fbfb963(address(this), _v9d8e96)) {
                 uint256 _va95b9f = _vde4409._f3d0e84(address(this), _v9d8e96);
                 address _v0be580 = _vde4409.ownerOf(_va95b9f);
@@ -414,7 +414,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         }
 
         if (_v45f631 != address(0)) {
-            IHauskaGroupManager(_v45f631)._f29547b(address(this), _v9d8e96);
+            IEmpressaGroupManager(_v45f631)._f29547b(address(this), _v9d8e96);
         }
 
         emit _e460186(_v9d8e96, toOrg, _v0366cb, newOwner);
@@ -426,7 +426,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     
     function _f2764f3() external view returns (address) {
         require(_vd0b565 != address(0), "License manager not set");
-        return IHauskaLicenseManager(_vd0b565)._v0fa623();
+        return IEmpressaLicenseManager(_vd0b565)._v0fa623();
     }
     
     
@@ -434,7 +434,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(_vd0b565 != address(0), "License manager not set");
         require(_v9b2fda != address(0), "Asset registry not set");
         
-        VerifiedDigitalAsset memory _v05fac9 = IHauskaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
+        VerifiedDigitalAsset memory _v05fac9 = IEmpressaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v9d8e96);
         require(_v05fac9._v9d8e96 > 0, "Invalid _v05fac9 ID");
         
         return (_vd0b565, _v05fac9._v2097c3);
@@ -445,7 +445,7 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
         require(_vd0b565 != address(0), "License manager not set");
         require(_v45f631 != address(0), "Group manager not set");
         
-        AssetGroup memory _v64292b = IHauskaGroupManager(_v45f631)._f624914(address(this), _vd6b1fa);
+        AssetGroup memory _v64292b = IEmpressaGroupManager(_v45f631)._f624914(address(this), _vd6b1fa);
         require(_v64292b._vd6b1fa > 0, "Invalid _v64292b ID");
         
         return (_vd0b565, _v64292b._v2459dc);
@@ -466,12 +466,12 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     function _f8fe555(address _v579233) external view returns (uint256[] memory) {
         require(_v9b2fda != address(0), "Asset registry not set");
         
-        uint256 _v9863e5 = IHauskaAssetRegistry(_v9b2fda)._f49b5a2(address(this));
+        uint256 _v9863e5 = IEmpressaAssetRegistry(_v9b2fda)._f49b5a2(address(this));
         uint256[] memory _v1429a1 = new uint256[](_v9863e5);
         uint256 _v0f03cc = 0;
         
         for (uint256 _v042dc4 = 1; _v042dc4 <= _v9863e5; _v042dc4++) {
-            VerifiedDigitalAsset memory _v05fac9 = IHauskaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v042dc4);
+            VerifiedDigitalAsset memory _v05fac9 = IEmpressaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v042dc4);
             if (_v05fac9._v579233 == _v579233) {
                 _v1429a1[_v0f03cc] = _v042dc4;
                 _v0f03cc++;
@@ -489,17 +489,17 @@ contract HauskaOrgContract is AccessControl, IHauskaStructs {
     function _f5bfb36(address _v579233) external view returns (uint256[] memory) {
         require(_v45f631 != address(0), "Group manager not set");
         
-        uint256 _ve7b3b4 = IHauskaGroupManager(_v45f631)._f496efd(address(this));
+        uint256 _ve7b3b4 = IEmpressaGroupManager(_v45f631)._f496efd(address(this));
         uint256[] memory _v97a2b0 = new uint256[](_ve7b3b4);
         uint256 _v0f03cc = 0;
         
         for (uint256 _v042dc4 = 1; _v042dc4 <= _ve7b3b4; _v042dc4++) {
-            AssetGroup memory _v64292b = IHauskaGroupManager(_v45f631)._f624914(address(this), _v042dc4);
+            AssetGroup memory _v64292b = IEmpressaGroupManager(_v45f631)._f624914(address(this), _v042dc4);
             
             
             bool _v3fb75b = true;
             for (uint256 _v5c2dd9 = 0; _v5c2dd9 < _v64292b._vf13eb5.length; _v5c2dd9++) {
-                VerifiedDigitalAsset memory _v05fac9 = IHauskaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v64292b._vf13eb5[_v5c2dd9]);
+                VerifiedDigitalAsset memory _v05fac9 = IEmpressaAssetRegistry(_v9b2fda)._f57ca34(address(this), _v64292b._vf13eb5[_v5c2dd9]);
                 if (_v05fac9._v579233 != _v579233) {
                     _v3fb75b = false;
                     break;

@@ -5,11 +5,11 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./interfaces/IHauskaStructs.sol";
-import "./interfaces/IHauskaContracts.sol";
+import "./interfaces/IEmpressaStructs.sol";
+import "./interfaces/IEmpressaContracts.sol";
 
 
-contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs {
+contract EmpressaLicenseManager is AccessControl, ReentrancyGuard, IEmpressaStructs {
     using SafeERC20 for IERC20;
     
     bytes32 public constant _c4f139c = keccak256("_c4f139c");
@@ -94,8 +94,8 @@ contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs 
         require(_v204851 != address(0), "Invalid _v204851");
         require(!assetLicensedBy[_v3030a8][_v9d8e96][_v204851], "Already licensed");
         
-        IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-            IHauskaOrgContract(_v3030a8)._v9b2fda()
+        IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+            IEmpressaOrgContract(_v3030a8)._v9b2fda()
         );
         VerifiedDigitalAsset memory _v05fac9 = registry._f57ca34(_v3030a8, _v9d8e96);
         
@@ -134,7 +134,7 @@ contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs 
         assetLicensedBy[_v3030a8][_v9d8e96][_v204851] = true;
         userLicenses[_v3030a8][_v204851].push(_v9863eb);
 
-        (uint32 _v3d6202, uint32 _v3055c2) = IHauskaRevenueDistributor(IHauskaOrgContract(_v3030a8)._vedea5b())._f434c53(_v3030a8);
+        (uint32 _v3d6202, uint32 _v3055c2) = IEmpressaRevenueDistributor(IEmpressaOrgContract(_v3030a8)._vedea5b())._f434c53(_v3030a8);
         
         emit _ecc66c6(_v3030a8, _v9863eb, _v9d8e96, _v204851, _v05fac9._v2097c3 * 10000 / (10000 + _v3d6202 + _v3055c2));
         
@@ -202,13 +202,13 @@ contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs 
         uint256 _v9cb6ff,
         address assetOwner
     ) private {
-        address _vedea5b = IHauskaOrgContract(_v3030a8)._vedea5b();
+        address _vedea5b = IEmpressaOrgContract(_v3030a8)._vedea5b();
         
         if (_vedea5b != address(0)) {
             
-            address _vbd9641 = IHauskaOrgContract(_v3030a8)._vbd9641();
+            address _vbd9641 = IEmpressaOrgContract(_v3030a8)._vbd9641();
             IERC20(_v0fa623).safeApprove(_vedea5b, _v9cb6ff);
-            IHauskaRevenueDistributor(_vedea5b)._f216d88(
+            IEmpressaRevenueDistributor(_vedea5b)._f216d88(
                 _v9d8e96,
                 _v204851,
                 address(this),
@@ -294,16 +294,16 @@ contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs 
         require(_v204851 != address(0), "Invalid _v204851");
         
         
-        IHauskaGroupManager _v45f631 = IHauskaGroupManager(
-            IHauskaOrgContract(_v3030a8)._v45f631()
+        IEmpressaGroupManager _v45f631 = IEmpressaGroupManager(
+            IEmpressaOrgContract(_v3030a8)._v45f631()
         );
         AssetGroup memory _v64292b = _v45f631._f624914(_v3030a8, _vd6b1fa);
         
         require(_v64292b._vd6b1fa > 0, "Group does not exist");
         require(_v64292b._vf13eb5.length > 0, "Group has no _f3685e3");
         
-        IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-            IHauskaOrgContract(_v3030a8)._v9b2fda()
+        IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+            IEmpressaOrgContract(_v3030a8)._v9b2fda()
         );
         
         IERC20(_v0fa623).safeTransferFrom(_v204851, address(this), _v64292b._v2459dc);

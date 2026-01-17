@@ -2,16 +2,16 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IHauskaStructs.sol";
-import "./interfaces/IHauskaContracts.sol";
-import "./HauskaAssetNFT.sol";
+import "./interfaces/IEmpressaStructs.sol";
+import "./interfaces/IEmpressaContracts.sol";
+import "./EmpressaAssetNFT.sol";
 
-contract HauskaAssetRegistry is AccessControl, IHauskaStructs {
+contract EmpressaAssetRegistry is AccessControl, IEmpressaStructs {
     bytes32 public constant _ca806f4 = keccak256("_ca806f4");
     bytes32 public constant _cc9dbe0 = keccak256("_cc9dbe0");
     bytes32 public constant _c15d343 = keccak256("_c15d343");
     
-    HauskaAssetNFT public _vde4409;
+    EmpressaAssetNFT public _vde4409;
 
     mapping(bytes32 => bool) public globalAssetHashExists;
     
@@ -58,7 +58,7 @@ contract HauskaAssetRegistry is AccessControl, IHauskaStructs {
     
     function _f070edc(address _v9d7695) external onlyRole(_ca806f4) {
         require(_v9d7695 != address(0), "Invalid NFT contract address");
-        _vde4409 = HauskaAssetNFT(_v9d7695);
+        _vde4409 = EmpressaAssetNFT(_v9d7695);
     }
     
     function _fcbb231(address _v3030a8) external onlyRole(_ca806f4) {
@@ -133,7 +133,7 @@ contract HauskaAssetRegistry is AccessControl, IHauskaStructs {
         uint256 _v9d8e96
     ) external view returns (VerifiedDigitalAsset memory) {
         VerifiedDigitalAsset memory _v05fac9 = _f3685e3[_v3030a8][_v9d8e96];
-        (uint32 _v3d6202, uint32 _v3055c2) = IHauskaRevenueDistributor(IHauskaOrgContract(_v3030a8)._vedea5b())._f434c53(_v3030a8);
+        (uint32 _v3d6202, uint32 _v3055c2) = IEmpressaRevenueDistributor(IEmpressaOrgContract(_v3030a8)._vedea5b())._f434c53(_v3030a8);
         _v05fac9._v2097c3 = _v05fac9._v2097c3 * (10000 + _v3d6202 + _v3055c2) / 10000;
         return _v05fac9;
     }
@@ -239,7 +239,7 @@ contract HauskaAssetRegistry is AccessControl, IHauskaStructs {
         VerifiedDigitalAsset storage _v806a72 = _f3685e3[fromOrg][_v9d8e96];
         require(_v806a72._v9d8e96 > 0, "Asset does not exist");
         require(
-            IHauskaOrgContract(fromOrg).hasRole(keccak256("_c1522a0"), curOwner),
+            IEmpressaOrgContract(fromOrg).hasRole(keccak256("_c1522a0"), curOwner),
             "Only _v35a34c can transfer cross-_vd23b59"
         );
         
@@ -250,7 +250,7 @@ contract HauskaAssetRegistry is AccessControl, IHauskaStructs {
         _vd5c3e4._v9d8e96 = _v0366cb;
         _vd5c3e4._vca0dd8 = _v806a72._vca0dd8; 
         _vd5c3e4._v579233 = newOwner; 
-        _vd5c3e4._v3624db = IHauskaOrgContract(toOrg)._vbd9641();
+        _vd5c3e4._v3624db = IEmpressaOrgContract(toOrg)._vbd9641();
         _vd5c3e4._vc6ec61 = _v806a72._vc6ec61;
         _vd5c3e4._vfd7108 = _v806a72._vfd7108;
         _vd5c3e4._vd4500a = _v806a72._vd4500a;

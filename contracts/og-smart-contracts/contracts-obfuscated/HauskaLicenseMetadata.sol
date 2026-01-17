@@ -3,28 +3,28 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
-import "./HauskaLicenseNFT.sol";
-import "./interfaces/IHauskaContracts.sol";
+import "./EmpressaLicenseNFT.sol";
+import "./interfaces/IEmpressaContracts.sol";
 
 
-contract HauskaLicenseMetadata {
+contract EmpressaLicenseMetadata {
     using Strings for uint256;
     
-    HauskaLicenseNFT public immutable _v5e116c;
+    EmpressaLicenseNFT public immutable _v5e116c;
     
     constructor(address _licenseNFT) {
         require(_licenseNFT != address(0), "Invalid NFT address");
-        _v5e116c = HauskaLicenseNFT(_licenseNFT);
+        _v5e116c = EmpressaLicenseNFT(_licenseNFT);
     }
     
     function tokenURI(uint256 _va95b9f) external view returns (string memory) {
         require(_v5e116c.ownerOf(_va95b9f) != address(0), "Token does not exist");
         
-        HauskaLicenseNFT.LicenseData memory _v234571 = _v5e116c._fa97764(_va95b9f);
-        IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-            IHauskaOrgContract(_v234571._v3030a8)._v9b2fda()
+        EmpressaLicenseNFT.LicenseData memory _v234571 = _v5e116c._fa97764(_va95b9f);
+        IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+            IEmpressaOrgContract(_v234571._v3030a8)._v9b2fda()
         );
-        IHauskaStructs.VerifiedDigitalAsset memory _v05fac9 = registry._f57ca34(_v234571._v3030a8, _v234571._v9d8e96);
+        IEmpressaStructs.VerifiedDigitalAsset memory _v05fac9 = registry._f57ca34(_v234571._v3030a8, _v234571._v9d8e96);
         
         
         string memory _vd7f67a = string(abi.encodePacked(
@@ -49,7 +49,7 @@ contract HauskaLicenseMetadata {
         
         string memory _v05d97e = string(abi.encodePacked(
             '{',
-            '"_v6ae999":"Hauska License #', _va95b9f.toString(), '",',
+            '"_v6ae999":"Empressa License #', _va95b9f.toString(), '",',
             '"description":"License for Verified Digital Asset #', _v234571._v9d8e96.toString(), '",',
             '"image":"', _fef1a5c(_va95b9f, _v234571, _v05fac9), '",',
             '"_vd7f67a":', _vd7f67a,
@@ -65,8 +65,8 @@ contract HauskaLicenseMetadata {
     
     function _fef1a5c(
         uint256 _va95b9f,
-        HauskaLicenseNFT.LicenseData memory _v234571,
-        IHauskaStructs.VerifiedDigitalAsset memory 
+        EmpressaLicenseNFT.LicenseData memory _v234571,
+        IEmpressaStructs.VerifiedDigitalAsset memory 
     ) internal view returns (string memory) {
         string memory svg = string(abi.encodePacked(
             '<svg xmlns="http://www.w3.org/2000/svg" width="350" height="350">',
@@ -77,7 +77,7 @@ contract HauskaLicenseMetadata {
             '</linearGradient>',
             '</defs>',
             '<rect width="350" height="350" fill="url(#grad)"/>',
-            '<text x="175" y="50" text-anchor="middle" fill="white" font-size="24" font-weight="bold">HAUSKA LICENSE</text>',
+            '<text x="175" y="50" text-anchor="middle" fill="white" font-size="24" font-weight="bold">Empressa LICENSE</text>',
             '<text x="175" y="100" text-anchor="middle" fill="white" font-size="18">#', _va95b9f.toString(), '</text>',
             '<rect x="25" y="120" width="300" height="1" fill="white" opacity="0.3"/>',
             '<text x="175" y="160" text-anchor="middle" fill="white" font-size="14">Asset ID: ', _v234571._v9d8e96.toString(), '</text>',

@@ -3,21 +3,21 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
-import "./HauskaLicenseNFT.sol";
-import "./interfaces/IHauskaContracts.sol";
+import "./EmpressaLicenseNFT.sol";
+import "./interfaces/IEmpressaContracts.sol";
 
 /**
- * @title HauskaLicenseMetadata
+ * @title EmpressaLicenseMetadata
  * @dev Generates on-chain metadata for license NFTs
  */
-contract HauskaLicenseMetadata {
+contract EmpressaLicenseMetadata {
     using Strings for uint256;
     
-    HauskaLicenseNFT public immutable licenseNFT;
+    EmpressaLicenseNFT public immutable licenseNFT;
     
     constructor(address _licenseNFT) {
         require(_licenseNFT != address(0), "Invalid NFT address");
-        licenseNFT = HauskaLicenseNFT(_licenseNFT);
+        licenseNFT = EmpressaLicenseNFT(_licenseNFT);
     }
     
     /**
@@ -26,13 +26,13 @@ contract HauskaLicenseMetadata {
     function tokenURI(uint256 tokenId) external view returns (string memory) {
         require(licenseNFT.ownerOf(tokenId) != address(0), "Token does not exist");
         
-        HauskaLicenseNFT.LicenseData memory license = licenseNFT.getLicenseDetails(tokenId);
+        EmpressaLicenseNFT.LicenseData memory license = licenseNFT.getLicenseDetails(tokenId);
         
         // Get asset details
-        IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-            IHauskaOrgContract(license.orgContract).assetRegistry()
+        IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+            IEmpressaOrgContract(license.orgContract).assetRegistry()
         );
-        IHauskaStructs.VerifiedDigitalAsset memory asset = registry.getAsset(license.orgContract, license.assetId);
+        IEmpressaStructs.VerifiedDigitalAsset memory asset = registry.getAsset(license.orgContract, license.assetId);
         
         // Build attributes
         string memory attributes = string(abi.encodePacked(
@@ -57,7 +57,7 @@ contract HauskaLicenseMetadata {
         // Build metadata
         string memory json = string(abi.encodePacked(
             '{',
-            '"name":"Hauska License #', tokenId.toString(), '",',
+            '"name":"Empressa License #', tokenId.toString(), '",',
             '"description":"License for Verified Digital Asset #', license.assetId.toString(), '",',
             '"image":"', generateSVG(tokenId, license, asset), '",',
             '"attributes":', attributes,
@@ -75,8 +75,8 @@ contract HauskaLicenseMetadata {
      */
     function generateSVG(
         uint256 tokenId,
-        HauskaLicenseNFT.LicenseData memory license,
-        IHauskaStructs.VerifiedDigitalAsset memory /*asset*/
+        EmpressaLicenseNFT.LicenseData memory license,
+        IEmpressaStructs.VerifiedDigitalAsset memory /*asset*/
     ) internal view returns (string memory) {
         string memory svg = string(abi.encodePacked(
             '<svg xmlns="http://www.w3.org/2000/svg" width="350" height="350" viewBox="0 0 350 350">',
@@ -87,7 +87,7 @@ contract HauskaLicenseMetadata {
             '</linearGradient>',
             '</defs>',
             '<rect width="350" height="350" fill="url(#grad)"/>',
-            '<text x="175" y="50" text-anchor="middle" fill="white" font-size="24" font-weight="bold">HAUSKA LICENSE</text>',
+            '<text x="175" y="50" text-anchor="middle" fill="white" font-size="24" font-weight="bold">Empressa LICENSE</text>',
             '<text x="175" y="100" text-anchor="middle" fill="white" font-size="18">#', tokenId.toString(), '</text>',
             '<rect x="25" y="120" width="300" height="1" fill="white" opacity="0.3"/>',
             '<text x="175" y="160" text-anchor="middle" fill="white" font-size="14">Asset ID: ', license.assetId.toString(), '</text>',

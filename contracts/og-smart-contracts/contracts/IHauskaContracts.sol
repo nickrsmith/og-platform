@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./IHauskaStructs.sol";
+import "./IEmpressaStructs.sol";
 
-interface IHauskaContractFactory {
-    function getPlatformFees() external view returns (uint32 integratorFee, uint32 hauskaFee);
+interface IEmpressaContractFactory {
+    function getPlatformFees() external view returns (uint32 integratorFee, uint32 EmpressaFee);
     function isValidOrgContract(address contractAddress) external view returns (bool);
     function licenseManager() external view returns (address);
     function getModules() external view returns (
@@ -16,7 +16,7 @@ interface IHauskaContractFactory {
     );
 }
 
-interface IHauskaOrgContract {
+interface IEmpressaOrgContract {
     function factory() external view returns (address);
     function principal() external view returns (address);
     function integrationPartner() external view returns (address);
@@ -40,7 +40,7 @@ interface IHauskaOrgContract {
         uint256 price,
         bool encrypted,
         bool canBeLicensed,
-        IHauskaStructs.FxPool fxPool,
+        IEmpressaStructs.FxPool fxPool,
         string memory eventTimestamp
     );
     
@@ -55,14 +55,14 @@ interface IHauskaOrgContract {
     function isOrganizationMember(address user) external view returns (bool);
 }
 
-interface IHauskaLicenseManager {
+interface IEmpressaLicenseManager {
     function usdcToken() external view returns (address);
 
     function licenseAsset(
         address orgContract,
         uint256 assetId,
         address licensee,
-        IHauskaStructs.LicensePermissions[] memory permissions,
+        IEmpressaStructs.LicensePermissions[] memory permissions,
         uint256 resellerFee
     ) external returns (uint256);
 
@@ -71,7 +71,7 @@ interface IHauskaLicenseManager {
         address orgContract,
         uint256 groupId,
         address licensee,
-        IHauskaStructs.LicensePermissions[] memory permissions,
+        IEmpressaStructs.LicensePermissions[] memory permissions,
         uint256 resellerFee
     ) external returns (uint256[] memory);
     
@@ -97,9 +97,9 @@ interface IHauskaLicenseManager {
     );
 }
 
-interface IHauskaAssetRegistry {
+interface IEmpressaAssetRegistry {
     function registerAsset(
-        IHauskaStructs.VerifiedDigitalAsset memory asset,
+        IEmpressaStructs.VerifiedDigitalAsset memory asset,
         address creator
     ) external returns (uint256);
     
@@ -117,7 +117,7 @@ interface IHauskaAssetRegistry {
     function getAsset(
         address orgContract,
         uint256 assetId
-    ) external view returns (IHauskaStructs.VerifiedDigitalAsset memory);
+    ) external view returns (IEmpressaStructs.VerifiedDigitalAsset memory);
     
     function isAssetVerified(
         address orgContract,
@@ -158,7 +158,7 @@ interface IHauskaAssetRegistry {
     function isIPFSHashUsed(string memory ipfsHash) external view returns (bool);
 }
 
-interface IHauskaAssetNFT {
+interface IEmpressaAssetNFT {
     function mintAssetNFT(
         address to,
         address orgContract,
@@ -183,7 +183,7 @@ interface IHauskaAssetNFT {
     function burn(uint256 tokenId) external;
 }
 
-interface IHauskaGroupManager {
+interface IEmpressaGroupManager {
     function createGroup(
         string memory groupName,
         uint256[] memory assetIds,
@@ -206,7 +206,7 @@ interface IHauskaGroupManager {
     function getGroup(
         address orgContract,
         uint256 groupId
-    ) external view returns (IHauskaStructs.AssetGroup memory);
+    ) external view returns (IEmpressaStructs.AssetGroup memory);
 
     function removeGroup(uint256 groupId, address caller) external;
     
@@ -224,7 +224,7 @@ interface IHauskaGroupManager {
     ) external;
 }
 
-interface IHauskaRevenueDistributor {
+interface IEmpressaRevenueDistributor {
     function distributeRevenue(
         uint256 assetId,
         address licensee,
@@ -237,16 +237,16 @@ interface IHauskaRevenueDistributor {
     
     function setCustomFees(
         address orgContract,
-        uint32 hauskaFeePct,
+        uint32 EmpressaFeePct,
         uint32 integratorFeePct
     ) external;
     
     function getRevenueStats(address orgContract) external view returns (
         uint256 total,
         uint256 creatorTotal,
-        uint256 hauskaTotal,
+        uint256 EmpressaTotal,
         uint256 integratorTotal
     );
 
-    function getCustomFees(address orgContract) external view returns (uint32 hauskaFeePct, uint32 integratorFeePct);
+    function getCustomFees(address orgContract) external view returns (uint32 EmpressaFeePct, uint32 integratorFeePct);
 }

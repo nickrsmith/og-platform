@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "🚀 Starting Hauska Platform with Asset NFTs & NFT Licenses..."
+echo "🚀 Starting Empressa Platform with Asset NFTs & NFT Licenses..."
 echo ""
 
 # Start Hardhat node in background
@@ -24,11 +24,11 @@ mkdir -p /app/deployments
 # Deploy contracts
 echo ""
 echo "📦 Deploying contracts..."
-npx hardhat run scripts/deploy-hauska-proxy.js --network localhost
+npx hardhat run scripts/deploy-Empressa-proxy.js --network localhost
 
 # setup proxy system
 echo ""
-echo "🔧 Setting up Hauska Proxy System..."
+echo "🔧 Setting up Empressa Proxy System..."
 npx hardhat run scripts/setup-proxy-system.js --network localhost
 
 # Fix permissions for NFT system
@@ -41,10 +41,10 @@ cat > /app/index.html << 'EOF'
 <html>
 <head>
     <meta http-equiv="refresh" content="0; url=/frontend/">
-    <title>Hauska NFT Platform</title>
+    <title>Empressa NFT Platform</title>
 </head>
 <body>
-    <p>Redirecting to Hauska NFT Platform...</p>
+    <p>Redirecting to Empressa NFT Platform...</p>
 </body>
 </html>
 EOF
@@ -53,7 +53,7 @@ EOF
 echo ""
 echo "🌐 Starting web server on port 3000..."
 echo ""
-echo "✅ Hauska NFT Platform is ready!"
+echo "✅ Empressa NFT Platform is ready!"
 echo ""
 echo "🌐 Access at: http://localhost:3000"
 echo "🔗 RPC Endpoint: http://localhost:8545"
@@ -61,8 +61,8 @@ echo ""
 echo "🎨 Asset NFTs: Each created asset automatically mints an NFT!"
 echo ""
 echo "📊 To check NFT status, run:"
-echo "   docker exec hauska-nft npx hardhat run scripts/check-nft-setup.js --network localhost"
-echo "   docker exec hauska-nft npx hardhat run scripts/check-nft-count.js --network localhost"
+echo "   docker exec Empressa-nft npx hardhat run scripts/check-nft-setup.js --network localhost"
+echo "   docker exec Empressa-nft npx hardhat run scripts/check-nft-count.js --network localhost"
 echo ""
 
 # Keep Hardhat running and serve web content
