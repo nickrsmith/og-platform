@@ -1,18 +1,18 @@
 # Monetization Contract Changes Plan
 
 ## Overview
-Restructuring the revenue distribution system to replace Hauska branding with Empressa Marketplace LLC and implement a new 5-payee slot system with referral fees.
+Restructuring the revenue distribution system to replace Empressa branding with Empressa Marketplace LLC and implement a new 5-payee slot system with referral fees.
 
 ## Changes Required
 
 ### 1. Branding Changes
-- Replace all "Hauska" references with "Empressa Marketplace LLC" or appropriate variable names
+- Replace all "Empressa" references with "Empressa Marketplace LLC" or appropriate variable names
 - Update contract names, variable names, comments, and events
 
 ### 2. New Payment Structure
 
 **Current Structure:**
-- Hauska fee (5% default)
+- Empressa fee (5% default)
 - Integrator fee (1% default)
 - Creator/Seller amount (94% default)
 
@@ -37,7 +37,7 @@ Plus a separate referral fee wallet (not a slot, but a separate payee).
 
 ## Implementation Details
 
-### Contract: HauskaRevenueDistributor → EmpressaRevenueDistributor
+### Contract: EmpressaRevenueDistributor → EmpressaRevenueDistributor
 
 **New State Variables:**
 ```solidity
@@ -55,7 +55,7 @@ uint32 public constant NV_FEE_PCT = 0;              // 0%
 uint32 public constant HM_FEE_PCT = 0;              // 0%
 uint32 public constant BLANK_FEE_PCT = 0;          // 0%
 
-// Earnings tracking (replacing Hauska/Integrator tracking)
+// Earnings tracking (replacing Empressa/Integrator tracking)
 mapping(address => uint256) public pendingEmpressaEarnings;
 mapping(address => uint256) public pendingReferralEarnings;
 mapping(address => uint256) public pendingNVEarnings;
@@ -155,68 +155,68 @@ function distributeRevenue(
 ## Files to Modify
 
 ### Primary Contract
-1. **HauskaRevenueDistributor.sol** → **EmpressaRevenueDistributor.sol**
+1. **EmpressaRevenueDistributor.sol** → **EmpressaRevenueDistributor.sol**
    - Rename contract
-   - Replace all Hauska references
+   - Replace all Empressa references
    - Implement new 5-payee slot system
    - Update fee calculation logic
    - Update earnings tracking
    - Update withdrawal functions
 
 ### Interface Files
-2. **IHauskaContracts.sol** → **IEmpressaContracts.sol**
+2. **IEmpressaContracts.sol** → **IEmpressaContracts.sol**
    - Update interface names
    - Update function signatures
    - Update return types
 
-3. **IHauskaStructs.sol** → **IEmpressaStructs.sol**
+3. **IEmpressaStructs.sol** → **IEmpressaStructs.sol**
    - Update interface name (if needed)
 
 ### Other Contracts (Branding Only)
-4. **HauskaOrgContract.sol** → **EmpressaOrgContract.sol**
+4. **EmpressaOrgContract.sol** → **EmpressaOrgContract.sol**
    - Rename contract
-   - Replace Hauska references in comments/events
+   - Replace Empressa references in comments/events
    - Update interface references
 
-5. **HauskaContractFactory.sol** → **EmpressaContractFactory.sol**
+5. **EmpressaContractFactory.sol** → **EmpressaContractFactory.sol**
    - Rename contract
    - Update getPlatformFees() to return new fee structure
-   - Replace Hauska references
+   - Replace Empressa references
 
-6. **HauskaLicenseManager.sol** → **EmpressaLicenseManager.sol**
+6. **EmpressaLicenseManager.sol** → **EmpressaLicenseManager.sol**
    - Rename contract
    - Update revenue distributor calls
-   - Replace Hauska references
+   - Replace Empressa references
 
-7. **HauskaLicenseManagerV2.sol** → **EmpressaLicenseManagerV2.sol**
+7. **EmpressaLicenseManagerV2.sol** → **EmpressaLicenseManagerV2.sol**
    - Same as above
 
-8. **HauskaAssetRegistry.sol** → **EmpressaAssetRegistry.sol**
+8. **EmpressaAssetRegistry.sol** → **EmpressaAssetRegistry.sol**
    - Rename contract
-   - Replace Hauska references
+   - Replace Empressa references
 
-9. **HauskaGroupManager.sol** → **EmpressaGroupManager.sol**
+9. **EmpressaGroupManager.sol** → **EmpressaGroupManager.sol**
    - Rename contract
-   - Replace Hauska references
+   - Replace Empressa references
 
-10. **HauskaAssetNFT.sol** → **EmpressaAssetNFT.sol**
+10. **EmpressaAssetNFT.sol** → **EmpressaAssetNFT.sol**
     - Rename contract
-    - Replace Hauska references
+    - Replace Empressa references
 
-11. **HauskaLicenseNFT.sol** → **EmpressaLicenseNFT.sol**
+11. **EmpressaLicenseNFT.sol** → **EmpressaLicenseNFT.sol**
     - Rename contract
-    - Replace Hauska references
+    - Replace Empressa references
 
-12. **HauskaLicenseMetadata.sol** → **EmpressaLicenseMetadata.sol**
+12. **EmpressaLicenseMetadata.sol** → **EmpressaLicenseMetadata.sol**
     - Rename contract
-    - Replace Hauska references in metadata
+    - Replace Empressa references in metadata
 
-13. **HauskaProxy.sol** → **EmpressaProxy.sol**
+13. **EmpressaProxy.sol** → **EmpressaProxy.sol**
     - Rename contract
-    - Replace Hauska references
+    - Replace Empressa references
 
 14. **OrgDeployer.sol**
-    - Update to deploy EmpressaOrgContract instead of HauskaOrgContract
+    - Update to deploy EmpressaOrgContract instead of EmpressaOrgContract
 
 ## Fee Calculation Example
 
@@ -240,7 +240,7 @@ function distributeRevenue(
 ## Next Steps
 
 1. ✅ Create this planning document
-2. ⏳ Rename and update HauskaRevenueDistributor.sol
+2. ⏳ Rename and update EmpressaRevenueDistributor.sol
 3. ⏳ Update interface files
 4. ⏳ Update other contracts (branding only)
 5. ⏳ Test fee calculations

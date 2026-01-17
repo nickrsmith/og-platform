@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-interface IHauskaStructs {
+interface IEmpressaStructs {
     enum FxPool { PII, DT, VDAS }
     enum LicensePermissions { View, Resell, Both }
     enum CountryCode { US, RU, JP, CN, UK, DE, FR, CA, AU, BR }

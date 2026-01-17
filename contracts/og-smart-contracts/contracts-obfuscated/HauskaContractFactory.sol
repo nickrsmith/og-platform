@@ -60,7 +60,7 @@ library RoleWiringLib {
 
 
 
-contract HauskaContractFactory {
+contract EmpressaContractFactory {
     bytes32 public constant _c4f139c = keccak256("_c4f139c");
     
     error InvalidAddress();
@@ -68,7 +68,7 @@ contract HauskaContractFactory {
     error ModulesNotSet();
     error PrincipalHasContract();
     error InvalidContract();
-    error HauskaFeeTooHigh();
+    error EmpressaFeeTooHigh();
     error IntegratorFeeTooHigh();
     
     address public _vd033e2;
@@ -171,12 +171,12 @@ contract HauskaContractFactory {
         emit Paused(p);
     }
 
-    function _fa489c3(uint32 _hauskaFeePct, uint32 _integratorFeePct) external _mc87f2a {
-        if (_hauskaFeePct > 5000) revert HauskaFeeTooHigh();    
+    function _fa489c3(uint32 _EmpressaFeePct, uint32 _integratorFeePct) external _mc87f2a {
+        if (_EmpressaFeePct > 5000) revert EmpressaFeeTooHigh();    
         if (_integratorFeePct > 200) revert IntegratorFeeTooHigh(); 
-        _v3d6202 = _hauskaFeePct;
+        _v3d6202 = _EmpressaFeePct;
         _v3055c2 = _integratorFeePct;
-        emit _e99fa36(_hauskaFeePct, _integratorFeePct);
+        emit _e99fa36(_EmpressaFeePct, _integratorFeePct);
     }
 
     function _f2b7448(address _v6fb819, address _vbd9641)

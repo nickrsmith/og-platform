@@ -5,14 +5,14 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./interfaces/IHauskaStructs.sol";
-import "./interfaces/IHauskaContracts.sol";
+import "./interfaces/IEmpressaStructs.sol";
+import "./interfaces/IEmpressaContracts.sol";
 
 /**
- * @title HauskaLicenseManager
+ * @title EmpressaLicenseManager
  * @dev License manager with revenue distribution and basic reseller support
  */
-contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs {
+contract EmpressaLicenseManager is AccessControl, ReentrancyGuard, IEmpressaStructs {
     using SafeERC20 for IERC20;
     
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -100,8 +100,8 @@ contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs 
         require(!assetLicensedBy[orgContract][assetId][licensee], "Already licensed");
         
         // Get asset details from registry
-        IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-            IHauskaOrgContract(orgContract).assetRegistry()
+        IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+            IEmpressaOrgContract(orgContract).assetRegistry()
         );
         VerifiedDigitalAsset memory asset = registry.getAsset(orgContract, assetId);
         
@@ -149,9 +149,9 @@ contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs 
         assetLicensedBy[orgContract][assetId][licensee] = true;
         userLicenses[orgContract][licensee].push(newLicenseId);
 
-        (uint32 hauskaFeePct, uint32 integratorFeePct) = IHauskaRevenueDistributor(IHauskaOrgContract(orgContract).revenueDistributor()).getCustomFees(orgContract);
+        (uint32 EmpressaFeePct, uint32 integratorFeePct) = IEmpressaRevenueDistributor(IEmpressaOrgContract(orgContract).revenueDistributor()).getCustomFees(orgContract);
         
-        emit LicenseGranted(orgContract, newLicenseId, assetId, licensee, asset.price * 10000 / (10000 + hauskaFeePct + integratorFeePct));
+        emit LicenseGranted(orgContract, newLicenseId, assetId, licensee, asset.price * 10000 / (10000 + EmpressaFeePct + integratorFeePct));
         
         return newLicenseId;
     }
@@ -217,18 +217,18 @@ contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs 
         uint256 amount,
         address assetOwner
     ) private {
-        address revenueDistributor = IHauskaOrgContract(orgContract).revenueDistributor();
+        address revenueDistributor = IEmpressaOrgContract(orgContract).revenueDistributor();
         
         if (revenueDistributor != address(0)) {
             // Get integration partner
-            address integrationPartner = IHauskaOrgContract(orgContract).integrationPartner();
+            address integrationPartner = IEmpressaOrgContract(orgContract).integrationPartner();
             
-            // (uint32 hauskaFeePct, uint32 integratorFeePct) = IHauskaRevenueDistributor(revenueDistributor).getCustomFees(orgContract);
+            // (uint32 EmpressaFeePct, uint32 integratorFeePct) = IEmpressaRevenueDistributor(revenueDistributor).getCustomFees(orgContract);
             // Approve revenue distributor to spend the amount
             IERC20(usdcToken).safeApprove(revenueDistributor, amount);
             
             // Call revenue distributor
-            IHauskaRevenueDistributor(revenueDistributor).distributeRevenue(
+            IEmpressaRevenueDistributor(revenueDistributor).distributeRevenue(
                 assetId,
                 licensee,
                 address(this),
@@ -316,8 +316,8 @@ contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs 
         require(licensee != address(0), "Invalid licensee");
         
         // Get group details
-        IHauskaGroupManager groupManager = IHauskaGroupManager(
-            IHauskaOrgContract(orgContract).groupManager()
+        IEmpressaGroupManager groupManager = IEmpressaGroupManager(
+            IEmpressaOrgContract(orgContract).groupManager()
         );
         AssetGroup memory group = groupManager.getGroup(orgContract, groupId);
         
@@ -325,8 +325,8 @@ contract HauskaLicenseManager is AccessControl, ReentrancyGuard, IHauskaStructs 
         require(group.members.length > 0, "Group has no assets");
         
         // Get asset registry
-        IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-            IHauskaOrgContract(orgContract).assetRegistry()
+        IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+            IEmpressaOrgContract(orgContract).assetRegistry()
         );
         
         // Transfer payment for group price

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./IHauskaStructs.sol";
+import "./IEmpressaStructs.sol";
 
-interface IHauskaContractFactory {
+interface IEmpressaContractFactory {
     function _f6ede20() external view returns (uint32 _v9aa481, uint32 _vf0d665);
     function _f4e55c4(address contractAddress) external view returns (bool);
     function _vd0b565() external view returns (address);
@@ -16,7 +16,7 @@ interface IHauskaContractFactory {
     );
 }
 
-interface IHauskaOrgContract {
+interface IEmpressaOrgContract {
     function _v7b202d() external view returns (address);
     function _v35a34c() external view returns (address);
     function _vbd9641() external view returns (address);
@@ -40,7 +40,7 @@ interface IHauskaOrgContract {
         uint256 _v2097c3,
         bool _vd92342,
         bool _vc772a5,
-        IHauskaStructs.FxPool _v7c582f,
+        IEmpressaStructs.FxPool _v7c582f,
         string memory _vcab70c
     );
     
@@ -55,14 +55,14 @@ interface IHauskaOrgContract {
     function _fbd9641() external view returns (address); // getIntegrator
 }
 
-interface IHauskaLicenseManager {
+interface IEmpressaLicenseManager {
     function _v0fa623() external view returns (address);
 
     function _f2df134(
         address _v3030a8,
         uint256 _v9d8e96,
         address _v204851,
-        IHauskaStructs.LicensePermissions[] memory _v7e9272,
+        IEmpressaStructs.LicensePermissions[] memory _v7e9272,
         uint256 _v09603a
     ) external returns (uint256);
 
@@ -71,7 +71,7 @@ interface IHauskaLicenseManager {
         address _v3030a8,
         uint256 _vd6b1fa,
         address _v204851,
-        IHauskaStructs.LicensePermissions[] memory _v7e9272,
+        IEmpressaStructs.LicensePermissions[] memory _v7e9272,
         uint256 _v09603a
     ) external returns (uint256[] memory);
     
@@ -97,9 +97,9 @@ interface IHauskaLicenseManager {
     );
 }
 
-interface IHauskaAssetRegistry {
+interface IEmpressaAssetRegistry {
     function _fcf0c01(
-        IHauskaStructs.VerifiedDigitalAsset memory _v05fac9,
+        IEmpressaStructs.VerifiedDigitalAsset memory _v05fac9,
         address _vca0dd8
     ) external returns (uint256);
     
@@ -117,7 +117,7 @@ interface IHauskaAssetRegistry {
     function _f57ca34(
         address _v3030a8,
         uint256 _v9d8e96
-    ) external view returns (IHauskaStructs.VerifiedDigitalAsset memory);
+    ) external view returns (IEmpressaStructs.VerifiedDigitalAsset memory);
     
     function _fc9b17f(
         address _v3030a8,
@@ -158,7 +158,7 @@ interface IHauskaAssetRegistry {
     function _f490f18(string memory _vc6ec61) external view returns (bool);
 }
 
-interface IHauskaAssetNFT {
+interface IEmpressaAssetNFT {
     function _ff6c888(
         address to,
         address _v3030a8,
@@ -183,7 +183,7 @@ interface IHauskaAssetNFT {
     function burn(uint256 _va95b9f) external;
 }
 
-interface IHauskaGroupManager {
+interface IEmpressaGroupManager {
     function _ff1bf61(
         string memory groupName,
         uint256[] memory assetIds,
@@ -206,7 +206,7 @@ interface IHauskaGroupManager {
     function _f624914(
         address _v3030a8,
         uint256 _vd6b1fa
-    ) external view returns (IHauskaStructs.AssetGroup memory);
+    ) external view returns (IEmpressaStructs.AssetGroup memory);
 
     function _faeb40b(uint256 _vd6b1fa, address caller) external;
     
@@ -223,7 +223,7 @@ interface IHauskaGroupManager {
     ) external;
 }
 
-interface IHauskaRevenueDistributor {
+interface IEmpressaRevenueDistributor {
     function _f216d88(
         uint256 _v9d8e96,
         address _v204851,

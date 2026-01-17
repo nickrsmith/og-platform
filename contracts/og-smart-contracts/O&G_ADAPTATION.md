@@ -10,7 +10,7 @@ This document summarizes the O&G-specific adaptations made to the smart contract
 
 ## Changes Made
 
-### 1. O&G Enums Added (`contracts/interfaces/IHauskaStructs.sol`)
+### 1. O&G Enums Added (`contracts/interfaces/IEmpressaStructs.sol`)
 
 Added three new enums matching the backend enums:
 
@@ -42,10 +42,10 @@ struct VerifiedDigitalAsset {
 
 ### 3. Revenue Distributor - Category C Free Listings
 
-Updated `HauskaRevenueDistributor.distributeRevenue()` to handle Category C assets:
+Updated `EmpressaRevenueDistributor.distributeRevenue()` to handle Category C assets:
 
 - **Category C assets**: No platform fees (free listings)
-  - `hauskaFee = 0`
+  - `EmpressaFee = 0`
   - `integratorFee = 0`
   - `ownerAmount = amount` (100% to creator)
   
@@ -67,7 +67,7 @@ function distributeRevenue(
 
 ### 4. License Managers Updated
 
-Both `HauskaLicenseManager` and `HauskaLicenseManagerV2` updated to:
+Both `EmpressaLicenseManager` and `EmpressaLicenseManagerV2` updated to:
 - Fetch asset from registry to get category
 - Pass category to revenue distributor
 
@@ -78,7 +78,7 @@ Both `HauskaLicenseManager` and `HauskaLicenseManagerV2` updated to:
 
 ### 5. Org Contract - Asset Creation
 
-Updated `HauskaOrgContract.createAsset()` to accept O&G fields:
+Updated `EmpressaOrgContract.createAsset()` to accept O&G fields:
 
 **New Function Signature:**
 ```solidity
@@ -106,11 +106,11 @@ function createAsset(
 
 ## Interface Updates
 
-### IHauskaContracts.sol
+### IEmpressaContracts.sol
 
-Updated `IHauskaRevenueDistributor` interface:
+Updated `IEmpressaRevenueDistributor` interface:
 ```solidity
-interface IHauskaRevenueDistributor {
+interface IEmpressaRevenueDistributor {
     function distributeRevenue(
         // ... existing parameters ...
         AssetCategory category  // NEW PARAMETER
@@ -125,21 +125,21 @@ interface IHauskaRevenueDistributor {
 
 Category C assets have **no platform fees**:
 - Creator receives 100% of the sale price
-- No Hauska fee
+- No Empressa fee
 - No integrator fee
 - This supports the "free listing" model for Category C users (individual mineral owners)
 
 ### Category A & B
 
 Normal fee distribution applies:
-- Default: 5% Hauska, 1% Integrator, 94% Creator
+- Default: 5% Empressa, 1% Integrator, 94% Creator
 - Custom fees can be set per organization via `setCustomFees()`
 
 ## Breaking Changes
 
 ⚠️ **Function Signature Changes:**
-1. `HauskaRevenueDistributor.distributeRevenue()` - Added `category` parameter
-2. `HauskaOrgContract.createAsset()` - Added 9 O&G parameters
+1. `EmpressaRevenueDistributor.distributeRevenue()` - Added `category` parameter
+2. `EmpressaOrgContract.createAsset()` - Added 9 O&G parameters
 
 **Migration Impact:**
 - Existing calls to `createAsset()` must be updated with O&G field values
@@ -148,24 +148,24 @@ Normal fee distribution applies:
 
 ## Files Modified
 
-1. `contracts/interfaces/IHauskaStructs.sol`
+1. `contracts/interfaces/IEmpressaStructs.sol`
    - Added O&G enums
    - Extended VerifiedDigitalAsset struct
 
-2. `contracts/interfaces/IHauskaContracts.sol`
-   - Updated IHauskaRevenueDistributor interface
+2. `contracts/interfaces/IEmpressaContracts.sol`
+   - Updated IEmpressaRevenueDistributor interface
 
-3. `contracts/HauskaRevenueDistributor.sol`
+3. `contracts/EmpressaRevenueDistributor.sol`
    - Added category parameter
    - Implemented Category C free listing logic
 
-4. `contracts/HauskaLicenseManager.sol`
+4. `contracts/EmpressaLicenseManager.sol`
    - Updated `_distributeRevenue()` to fetch and pass category
 
-5. `contracts/HauskaLicenseManagerV2.sol`
+5. `contracts/EmpressaLicenseManagerV2.sol`
    - Updated `_distributeRevenue()` to fetch and pass category
 
-6. `contracts/HauskaOrgContract.sol`
+6. `contracts/EmpressaOrgContract.sol`
    - Updated `createAsset()` to accept O&G fields
 
 ## Testing Requirements

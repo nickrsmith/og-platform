@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🐳 Simple Docker Setup for Hauska NFT Platform with Asset NFTs & Block Explorer"
+echo "🐳 Simple Docker Setup for Empressa NFT Platform with Asset NFTs & Block Explorer"
 echo "=============================================================================="
 echo ""
 echo "✨ Features:"
@@ -11,18 +11,18 @@ echo ""
 
 # Stop and remove any existing containers
 echo "🧹 Cleaning up existing containers..."
-docker stop hauska-nft 2>/dev/null || true
-docker rm hauska-nft 2>/dev/null || true
-docker stop hauska-explorer 2>/dev/null || true
-docker rm hauska-explorer 2>/dev/null || true
+docker stop Empressa-nft 2>/dev/null || true
+docker rm Empressa-nft 2>/dev/null || true
+docker stop Empressa-explorer 2>/dev/null || true
+docker rm Empressa-explorer 2>/dev/null || true
 
 # Create a network for containers to communicate
 echo "🌐 Creating Docker network..."
-docker network create hauska-network 2>/dev/null || true
+docker network create Empressa-network 2>/dev/null || true
 
 # Build the Docker image (always rebuild)
 echo "🔨 Building Docker image (fresh build with Asset NFT support)..."
-docker build -f Dockerfile.simple -t hauska-nft . --no-cache
+docker build -f Dockerfile.simple -t Empressa-nft . --no-cache
 
 # Verify the build succeeded
 if [ $? -ne 0 ]; then
@@ -33,19 +33,19 @@ fi
 # Start block explorer in background
 echo "🔍 Starting block explorer..."
 docker run -d \
-  --name hauska-explorer \
-  --network hauska-network \
+  --name Empressa-explorer \
+  --network Empressa-network \
   -p 3001:80 \
-  -e REACT_APP_ETH_RPC_URL=http://hauska-nft:8545 \
-  -e REACT_APP_SERVICE_RPC=http://hauska-nft:8545 \
-  -e REACT_APP_DEFAULT_SERVICE_RPC=http://hauska-nft:8545 \
+  -e REACT_APP_ETH_RPC_URL=http://Empressa-nft:8545 \
+  -e REACT_APP_SERVICE_RPC=http://Empressa-nft:8545 \
+  -e REACT_APP_DEFAULT_SERVICE_RPC=http://Empressa-nft:8545 \
   etclabscore/expedition:latest
 
 # Wait a moment for explorer to start
 sleep 2
 
 echo ""
-echo "🚀 Starting Hauska platform with Asset NFTs..."
+echo "🚀 Starting Empressa platform with Asset NFTs..."
 echo ""
 echo "✅ Services available at:"
 echo "   📱 Frontend:       http://localhost:3000"
@@ -64,16 +64,16 @@ echo "   - You can see NFT mint transactions in the explorer"
 echo "   - For full NFT metadata support, run: ./run-blockscout.sh"
 echo ""
 echo "🔧 Useful Commands:"
-echo "   Check NFT setup:  docker exec hauska-nft npx hardhat run scripts/check-nft-setup.js --network localhost"
-echo "   Test Asset NFT:   docker exec hauska-nft npx hardhat run scripts/test-asset-nft.js --network localhost"
+echo "   Check NFT setup:  docker exec Empressa-nft npx hardhat run scripts/check-nft-setup.js --network localhost"
+echo "   Test Asset NFT:   docker exec Empressa-nft npx hardhat run scripts/test-asset-nft.js --network localhost"
 echo ""
 
 echo "⏳ Please wait while contracts are being deployed..."
 echo "   This includes:"
-echo "   - HauskaContractFactory"
-echo "   - HauskaAssetNFT (NEW!)"
-echo "   - HauskaLicenseManager"
-echo "   - HauskaAssetRegistry"
+echo "   - EmpressaContractFactory"
+echo "   - EmpressaAssetNFT (NEW!)"
+echo "   - EmpressaLicenseManager"
+echo "   - EmpressaAssetRegistry"
 echo "   - And other modules..."
 echo ""
 
@@ -81,6 +81,6 @@ echo ""
 docker run -it --rm \
   -p 8545:8545 \
   -p 3000:3000 \
-  --name hauska-nft \
-  --network hauska-network \
-  hauska-nft
+  --name Empressa-nft \
+  --network Empressa-network \
+  Empressa-nft

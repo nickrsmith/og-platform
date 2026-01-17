@@ -24,26 +24,26 @@ fi
 mkdir -p $BINDINGS_DIR
 
 # Generate all contract bindings
-echo "Generating HauskaContractFactory bindings..."
-jq '.abi' $ARTIFACTS_DIR/HauskaContractFactory.sol/HauskaContractFactory.json | abigen --abi - --pkg contracts --type HauskaContractFactory --out $BINDINGS_DIR/factory.go
+echo "Generating EmpressaContractFactory bindings..."
+jq '.abi' $ARTIFACTS_DIR/EmpressaContractFactory.sol/EmpressaContractFactory.json | abigen --abi - --pkg contracts --type EmpressaContractFactory --out $BINDINGS_DIR/factory.go
 
-echo "Generating HauskaOrgContract bindings..."
-jq '.abi' $ARTIFACTS_DIR/HauskaOrgContract.sol/HauskaOrgContract.json | abigen --abi - --pkg contracts --type HauskaOrgContract --out $BINDINGS_DIR/organization.go
+echo "Generating EmpressaOrgContract bindings..."
+jq '.abi' $ARTIFACTS_DIR/EmpressaOrgContract.sol/EmpressaOrgContract.json | abigen --abi - --pkg contracts --type EmpressaOrgContract --out $BINDINGS_DIR/organization.go
 
-echo "Generating HauskaLicenseManager bindings..."
-jq '.abi' $ARTIFACTS_DIR/HauskaLicenseManager.sol/HauskaLicenseManager.json | abigen --abi - --pkg contracts --type HauskaLicenseManager --out $BINDINGS_DIR/license_manager.go
+echo "Generating EmpressaLicenseManager bindings..."
+jq '.abi' $ARTIFACTS_DIR/EmpressaLicenseManager.sol/EmpressaLicenseManager.json | abigen --abi - --pkg contracts --type EmpressaLicenseManager --out $BINDINGS_DIR/license_manager.go
 
-echo "Generating HauskaAssetRegistry bindings..."
-jq '.abi' $ARTIFACTS_DIR/HauskaAssetRegistry.sol/HauskaAssetRegistry.json | abigen --abi - --pkg contracts --type HauskaAssetRegistry --out $BINDINGS_DIR/asset_registry.go
+echo "Generating EmpressaAssetRegistry bindings..."
+jq '.abi' $ARTIFACTS_DIR/EmpressaAssetRegistry.sol/EmpressaAssetRegistry.json | abigen --abi - --pkg contracts --type EmpressaAssetRegistry --out $BINDINGS_DIR/asset_registry.go
 
-echo "Generating HauskaGroupManager bindings..."
-jq '.abi' $ARTIFACTS_DIR/HauskaGroupManager.sol/HauskaGroupManager.json | abigen --abi - --pkg contracts --type HauskaGroupManager --out $BINDINGS_DIR/group_manager.go
+echo "Generating EmpressaGroupManager bindings..."
+jq '.abi' $ARTIFACTS_DIR/EmpressaGroupManager.sol/EmpressaGroupManager.json | abigen --abi - --pkg contracts --type EmpressaGroupManager --out $BINDINGS_DIR/group_manager.go
 
-echo "Generating HauskaRevenueDistributor bindings..."
-jq '.abi' $ARTIFACTS_DIR/HauskaRevenueDistributor.sol/HauskaRevenueDistributor.json | abigen --abi - --pkg contracts --type HauskaRevenueDistributor --out $BINDINGS_DIR/revenue_distributor.go
+echo "Generating EmpressaRevenueDistributor bindings..."
+jq '.abi' $ARTIFACTS_DIR/EmpressaRevenueDistributor.sol/EmpressaRevenueDistributor.json | abigen --abi - --pkg contracts --type EmpressaRevenueDistributor --out $BINDINGS_DIR/revenue_distributor.go
 
-echo "Generating HauskaAssetNFT bindings..."
-jq '.abi' $ARTIFACTS_DIR/HauskaAssetNFT.sol/HauskaAssetNFT.json | abigen --abi - --pkg contracts --type HauskaAssetNFT --out $BINDINGS_DIR/asset_nft.go
+echo "Generating EmpressaAssetNFT bindings..."
+jq '.abi' $ARTIFACTS_DIR/EmpressaAssetNFT.sol/EmpressaAssetNFT.json | abigen --abi - --pkg contracts --type EmpressaAssetNFT --out $BINDINGS_DIR/asset_nft.go
 
 echo "Generating MockUSDC bindings..."
 jq '.abi' $ARTIFACTS_DIR/mocks/MockUSDC.sol/MockUSDC.json | abigen --abi - --pkg contracts --type MockUSDC --out $BINDINGS_DIR/usdc.go

@@ -2,51 +2,32 @@
 
 Complete reference for all environment variables required by the O&G Platform services.
 
+*Last Updated: January 16, 2026*
+
 ## Overview
 
 Each service requires specific environment variables. Copy `.env.example` to `.env` in each service directory and configure the values.
 
-## Backend: OG Backend
+## Backend Services
 
-**Location:** `backend/og-backend/.env`
+**Location:** `backend/.env`
 
-See `backend/og-backend/.env.example` for complete configuration.
+See `backend/.env.example` for complete configuration.
 
 **Key Variables:**
 - `DATABASE_URL` - PostgreSQL connection string
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` - PostgreSQL credentials
 - `REDIS_HOST`, `REDIS_PORT` - Redis configuration
 - `RABBITMQ_USER`, `RABBITMQ_PASS` - RabbitMQ credentials
 - `JWT_SECRET` - JWT signing secret
 - `WEB3AUTH_JWKS_URL` - Web3Auth configuration
-- `BLOCKCHAIN_SERVICE_URL` - Blockchain service URL
-- `INDEXER_API_URL` - Lens platform indexer URL
-- `LENS_MANAGER_URL` - Lens platform manager URL
-
-## Backend: OG Lens Platform
-
-**Location:** `backend/og-lens-platform/.env`
-
-See `backend/og-lens-platform/.env.example` for complete configuration.
-
-**Key Variables:**
-- `DATABASE_URL` - PostgreSQL connection string
-- `GH_PAT` - GitHub Personal Access Token (for private packages)
-- `LENS_MANAGER_MASTER_KEY` - P2P master key
-- `BOOTSTRAP_PEERS` - P2P bootstrap peer addresses
-- `P2P_MAX_OPEN_SITES` - Maximum open P2P sites
-
-## Backend: OG Data Room Backend
-
-**Location:** `backend/og-data-room-backend/.env`
-
-See `backend/og-data-room-backend/.env.example` for complete configuration.
-
-**Key Variables:**
-- `MONGO_HOST`, `MONGO_PORT`, `MONGO_USER`, `MONGO_PASSWORD`, `MONGO_DATABASE` - MongoDB configuration
-- `REDIS_HOST`, `REDIS_PORT` - Redis configuration
-- `JWT_SECRET` - JWT signing secret
-- `WEB3AUTH_JWKS_URL` - Web3Auth configuration
-- `POSTMARK_API_KEY` - Email service API key
+- `CORE_API_PORT` - Core API port (default: 3002)
+- `ADMIN_SERVICE_PORT` - Admin service port (default: 4243)
+- `KMS_SERVICE_PORT` - KMS service port (default: 3001)
+- `BLOCKCHAIN_SERVICE_PORT` - Blockchain service port (default: 3003)
+- `IPFS_SERVICE_PORT` - IPFS service port (default: 3004)
+- `ROYALTY_MARKETPLACE_URL` - Frontend marketplace URL
+- `ADMIN_DASHBOARD_URL` - Admin dashboard URL
 
 ## Frontend Applications
 
@@ -69,9 +50,8 @@ See each frontend's README or configuration files for specific requirements.
 - Configure in blockchain service configuration
 
 ### Email Services
-- **Resend**: For og-backend email service
-- **Postmark**: For og-data-room-backend email service
-- Configure API keys in respective .env files
+- **Resend**: For backend email service
+- Configure API keys in backend .env file
 
 ## Security Notes
 

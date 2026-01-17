@@ -5,19 +5,19 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./interfaces/IHauskaContracts.sol";
-import "./interfaces/IHauskaStructs.sol";
-import "./HauskaLicenseNFT.sol";
+import "./interfaces/IEmpressaContracts.sol";
+import "./interfaces/IEmpressaStructs.sol";
+import "./EmpressaLicenseNFT.sol";
 
 
-contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicenseManager {
+contract EmpressaLicenseManagerV2 is AccessControl, ReentrancyGuard, IEmpressaLicenseManager {
     using SafeERC20 for IERC20;
     
     bytes32 public constant _cc9dbe0 = keccak256("_cc9dbe0");
     
     address public immutable _v9a06a8;
     address public immutable _v0fa623;
-    HauskaLicenseNFT public immutable _v5e116c;
+    EmpressaLicenseNFT public immutable _v5e116c;
     
     
     event _ecc66c6(
@@ -51,7 +51,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         
         _v9a06a8 = _factory;
         _v0fa623 = _vec75e2;
-        _v5e116c = new HauskaLicenseNFT();
+        _v5e116c = new EmpressaLicenseNFT();
         _v5e116c.grantRole(_v5e116c._c46ff91(), address(this));
         
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -61,7 +61,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         address _v3030a8,
         uint256 _v9d8e96,
         address _v204851,
-        IHauskaStructs.LicensePermissions[] memory _v7e9272,
+        IEmpressaStructs.LicensePermissions[] memory _v7e9272,
         uint256 _v09603a
     ) external returns (uint256) {
         return _f726df9(_v3030a8, _v9d8e96, _v204851, _v7e9272, _v09603a, 0);
@@ -71,7 +71,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         address _v3030a8,
         uint256 _v9d8e96,
         address _v204851,
-        IHauskaStructs.LicensePermissions[] memory _v7e9272,
+        IEmpressaStructs.LicensePermissions[] memory _v7e9272,
         uint256 _v09603a,
         uint256 duration
     ) public nonReentrant returns (uint256) {
@@ -79,10 +79,10 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         require(_v204851 != address(0), "Invalid _v204851");
         require(!_v5e116c.hasLicense(_v3030a8, _v9d8e96, _v204851), "Already licensed");
         
-        IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-            IHauskaOrgContract(_v3030a8)._v9b2fda()
+        IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+            IEmpressaOrgContract(_v3030a8)._v9b2fda()
         );
-        IHauskaStructs.VerifiedDigitalAsset memory _v05fac9 = registry._f57ca34(_v3030a8, _v9d8e96);
+        IEmpressaStructs.VerifiedDigitalAsset memory _v05fac9 = registry._f57ca34(_v3030a8, _v9d8e96);
         
         require(_v05fac9._v9d8e96 > 0, "Asset does not exist");
         require(_v05fac9._v47da9d, "Asset not verified");
@@ -93,8 +93,8 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         
         uint8 _v5e4fd4 = 0;
         for (uint _v042dc4 = 0; _v042dc4 < _v7e9272.length; _v042dc4++) {
-            if (_v7e9272[_v042dc4] == IHauskaStructs.LicensePermissions._v69bd4e) _v5e4fd4 |= 2;
-            if (_v7e9272[_v042dc4] == IHauskaStructs.LicensePermissions.Resell) _v5e4fd4 |= 1;
+            if (_v7e9272[_v042dc4] == IEmpressaStructs.LicensePermissions._v69bd4e) _v5e4fd4 |= 2;
+            if (_v7e9272[_v042dc4] == IEmpressaStructs.LicensePermissions.Resell) _v5e4fd4 |= 1;
         }
         if (_v5e4fd4 == 0) _v5e4fd4 = 2; 
         
@@ -120,22 +120,22 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         address _v204851,
         uint256 existingLicenseId
     ) external returns (uint256) {
-        IHauskaStructs.LicensePermissions[] memory _v7e9272 = new IHauskaStructs.LicensePermissions[](1);
-        _v7e9272[0] = IHauskaStructs.LicensePermissions._v69bd4e;
+        IEmpressaStructs.LicensePermissions[] memory _v7e9272 = new IEmpressaStructs.LicensePermissions[](1);
+        _v7e9272[0] = IEmpressaStructs.LicensePermissions._v69bd4e;
         return _f91c986(existingLicenseId, _v204851, _v7e9272, 0);
     }
     
     function _f91c986(
         uint256 originalTokenId,
         address newLicensee,
-        IHauskaStructs.LicensePermissions[] memory newPermissions,
+        IEmpressaStructs.LicensePermissions[] memory newPermissions,
         uint256 newResellerFee
     ) public nonReentrant returns (uint256) {
         require(_v5e116c.ownerOf(originalTokenId) == msg.sender, "Not _v234571 _v579233");
         require(newLicensee != address(0), "Invalid _v204851");
         require(_v5e116c._f8567c8(originalTokenId), "License not valid");
         
-        HauskaLicenseNFT.LicenseData memory _v3acede = _v5e116c._fa97764(originalTokenId);
+        EmpressaLicenseNFT.LicenseData memory _v3acede = _v5e116c._fa97764(originalTokenId);
         
         require(_v3acede._v7e9272 & 1 == 1, "No resell _v6d244f");
         require(!_v5e116c.hasLicense(_v3acede._v3030a8, _v3acede._v9d8e96, newLicensee), "Already licensed");
@@ -150,8 +150,8 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         
         uint8 _v5e4fd4 = 0;
         for (uint _v042dc4 = 0; _v042dc4 < newPermissions.length; _v042dc4++) {
-            if (newPermissions[_v042dc4] == IHauskaStructs.LicensePermissions._v69bd4e) _v5e4fd4 |= 2;
-            if (newPermissions[_v042dc4] == IHauskaStructs.LicensePermissions.Resell) _v5e4fd4 |= 1;
+            if (newPermissions[_v042dc4] == IEmpressaStructs.LicensePermissions._v69bd4e) _v5e4fd4 |= 2;
+            if (newPermissions[_v042dc4] == IEmpressaStructs.LicensePermissions.Resell) _v5e4fd4 |= 1;
         }
         if (_v5e4fd4 == 0) _v5e4fd4 = 2;
         
@@ -175,16 +175,16 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         address _v3030a8,
         uint256 _vd6b1fa,
         address _v204851,
-        IHauskaStructs.LicensePermissions[] memory _v7e9272,
+        IEmpressaStructs.LicensePermissions[] memory _v7e9272,
         uint256 
     ) external nonReentrant returns (uint256[] memory) {
         require(hasRole(_cc9dbe0, msg.sender), "Not authorized");
         require(_v204851 != address(0), "Invalid _v204851");
         
-        IHauskaGroupManager _v45f631 = IHauskaGroupManager(
-            IHauskaOrgContract(_v3030a8)._v45f631()
+        IEmpressaGroupManager _v45f631 = IEmpressaGroupManager(
+            IEmpressaOrgContract(_v3030a8)._v45f631()
         );
-        IHauskaStructs.AssetGroup memory _v64292b = _v45f631._f624914(_v3030a8, _vd6b1fa);
+        IEmpressaStructs.AssetGroup memory _v64292b = _v45f631._f624914(_v3030a8, _vd6b1fa);
         
         require(_v64292b._vd6b1fa > 0, "Group does not exist");
         require(_v64292b._vf13eb5.length > 0, "Empty _v64292b");
@@ -198,10 +198,10 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
             if (_v5e116c.hasLicense(_v3030a8, _v64292b._vf13eb5[_v042dc4], _v204851)) {
                 continue;
             }
-            IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-                IHauskaOrgContract(_v3030a8)._v9b2fda()
+            IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+                IEmpressaOrgContract(_v3030a8)._v9b2fda()
             );
-            IHauskaStructs.VerifiedDigitalAsset memory _v05fac9 = registry._f57ca34(_v3030a8, _v64292b._vf13eb5[_v042dc4]);
+            IEmpressaStructs.VerifiedDigitalAsset memory _v05fac9 = registry._f57ca34(_v3030a8, _v64292b._vf13eb5[_v042dc4]);
             
             require(_v05fac9._v47da9d, "Asset not verified");
             require(_v05fac9._vc772a5, "Asset cannot be licensed");
@@ -211,8 +211,8 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
             
             uint8 _v5e4fd4 = 0;
             for (uint _v5c2dd9 = 0; _v5c2dd9 < _v7e9272.length; _v5c2dd9++) {
-                if (_v7e9272[_v5c2dd9] == IHauskaStructs.LicensePermissions._v69bd4e) _v5e4fd4 |= 2;
-                if (_v7e9272[_v5c2dd9] == IHauskaStructs.LicensePermissions.Resell) _v5e4fd4 |= 1;
+                if (_v7e9272[_v5c2dd9] == IEmpressaStructs.LicensePermissions._v69bd4e) _v5e4fd4 |= 2;
+                if (_v7e9272[_v5c2dd9] == IEmpressaStructs.LicensePermissions.Resell) _v5e4fd4 |= 1;
             }
             if (_v5e4fd4 == 0) _v5e4fd4 = 2;
             _vb6adb2[_v042dc4] = _v5e116c._fd9a1eb(
@@ -234,14 +234,14 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         require(_v5e116c.ownerOf(_va95b9f) == msg.sender, "Not _v234571 _v579233");
         require(_vb0ad1d > 0, "Invalid duration");
         
-        HauskaLicenseNFT.LicenseData memory _v234571 = _v5e116c._fa97764(_va95b9f);
+        EmpressaLicenseNFT.LicenseData memory _v234571 = _v5e116c._fa97764(_va95b9f);
         require(_v234571._vdf9c6b > 0, "License is perpetual");
         
         
-        IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-            IHauskaOrgContract(_v234571._v3030a8)._v9b2fda()
+        IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+            IEmpressaOrgContract(_v234571._v3030a8)._v9b2fda()
         );
-        IHauskaStructs.VerifiedDigitalAsset memory _v05fac9 = registry._f57ca34(_v234571._v3030a8, _v234571._v9d8e96);
+        IEmpressaStructs.VerifiedDigitalAsset memory _v05fac9 = registry._f57ca34(_v234571._v3030a8, _v234571._v9d8e96);
         
         IERC20(_v0fa623).safeTransferFrom(msg.sender, address(this), _v05fac9._v2097c3);
         _fabb131(_v234571._v9d8e96, msg.sender, _v234571._v3030a8, _v05fac9._v2097c3, _v05fac9._vca0dd8);
@@ -271,7 +271,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         
         uint256 _vee9f38 = 0;
         for (uint256 _v042dc4 = 0; _v042dc4 < _v728f99.length; _v042dc4++) {
-            HauskaLicenseNFT.LicenseData memory _v234571 = _v5e116c._fa97764(_v728f99[_v042dc4]);
+            EmpressaLicenseNFT.LicenseData memory _v234571 = _v5e116c._fa97764(_v728f99[_v042dc4]);
             if (_v234571._v3030a8 == _v3030a8) {
                 _vee9f38++;
             }
@@ -280,7 +280,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         uint256[] memory _v989983 = new uint256[](_vee9f38);
         uint256 _ve540cd = 0;
         for (uint256 _v042dc4 = 0; _v042dc4 < _v728f99.length; _v042dc4++) {
-            HauskaLicenseNFT.LicenseData memory _v234571 = _v5e116c._fa97764(_v728f99[_v042dc4]);
+            EmpressaLicenseNFT.LicenseData memory _v234571 = _v5e116c._fa97764(_v728f99[_v042dc4]);
             if (_v234571._v3030a8 == _v3030a8) {
                 _v989983[_ve540cd] = _v728f99[_v042dc4];
                 _ve540cd++;
@@ -305,7 +305,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
             address _v3030a8
         ) 
     {
-        HauskaLicenseNFT.LicenseData memory _v234571 = _v5e116c._fa97764(_va95b9f);
+        EmpressaLicenseNFT.LicenseData memory _v234571 = _v5e116c._fa97764(_va95b9f);
         address _v579233 = _v5e116c.ownerOf(_va95b9f);
         
         return (
@@ -324,14 +324,14 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         uint256 _v9cb6ff,
         address assetOwner
     ) private {
-        address _vedea5b = IHauskaOrgContract(_v3030a8)._vedea5b();
+        address _vedea5b = IEmpressaOrgContract(_v3030a8)._vedea5b();
         
         if (_vedea5b != address(0)) {
-            address _vbd9641 = IHauskaOrgContract(_v3030a8)._vbd9641();
+            address _vbd9641 = IEmpressaOrgContract(_v3030a8)._vbd9641();
             
             IERC20(_v0fa623).safeApprove(_vedea5b, _v9cb6ff);
             
-            IHauskaRevenueDistributor(_vedea5b)._f216d88(
+            IEmpressaRevenueDistributor(_vedea5b)._f216d88(
                 _v9d8e96,
                 _v204851,
                 address(this),

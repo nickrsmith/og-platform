@@ -69,7 +69,7 @@ library RoleWiringLib {
     }
 }
 
-contract HauskaContractFactoryUpgradeable is 
+contract EmpressaContractFactoryUpgradeable is 
     AccessControlUpgradeable, 
     PausableUpgradeable, 
     ReentrancyGuardUpgradeable, 
@@ -81,7 +81,7 @@ contract HauskaContractFactoryUpgradeable is
     error ModulesNotSet();
     error PrincipalHasContract();
     error InvalidContract();
-    error HauskaFeeTooHigh();
+    error EmpressaFeeTooHigh();
     error IntegratorFeeTooHigh();
     
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
@@ -100,7 +100,7 @@ contract HauskaContractFactoryUpgradeable is
     address public assetNFT;
     
     // Fee configuration
-    uint32 public hauskaFeePct;
+    uint32 public EmpressaFeePct;
     uint32 public integratorFeePct;
     
     // Org tracking
@@ -115,7 +115,7 @@ contract HauskaContractFactoryUpgradeable is
     event OrgContractCreated(address indexed principal, address indexed orgContract, address indexed integrationPartner);
     event OrgContractRemoved(address indexed org);
     event ModulesSet(address licenseManager, address assetRegistry, address groupManager, address revenueDistributor, address assetNFT);
-    event FeesUpdated(uint32 hauskaFee, uint32 integratorFee);
+    event FeesUpdated(uint32 EmpressaFee, uint32 integratorFee);
     event OrgDeployerChanged(address indexed oldDeployer, address indexed newDeployer);
     event AssetNFTChanged(address indexed oldAssetNFT, address indexed newAssetNFT);
 
@@ -228,14 +228,14 @@ contract HauskaContractFactoryUpgradeable is
         emit AssetNFTChanged(oldAssetNFT, _assetNFT);
     }
 
-    function updateFees(uint32 _hauskaFee, uint32 _integratorFee) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_hauskaFee <= 5000, "Hauska fee too high"); // Max 50%
+    function updateFees(uint32 _EmpressaFee, uint32 _integratorFee) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_EmpressaFee <= 5000, "Empressa fee too high"); // Max 50%
         require(_integratorFee <= 200, "Integrator fee too high"); // Max 2%
 
-        hauskaFeePct = _hauskaFee;
+        EmpressaFeePct = _EmpressaFee;
         integratorFeePct = _integratorFee;
 
-        emit FeesUpdated(_hauskaFee, _integratorFee);
+        emit FeesUpdated(_EmpressaFee, _integratorFee);
     }
 
     // View functions
@@ -244,7 +244,7 @@ contract HauskaContractFactoryUpgradeable is
     }
 
     function getPlatformFees() external view returns (uint32, uint32) {
-        return (integratorFeePct, hauskaFeePct);
+        return (integratorFeePct, EmpressaFeePct);
     }
 
     function getOrgDeployer() external view returns (address) {

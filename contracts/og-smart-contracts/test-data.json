@@ -1,14 +1,14 @@
 {
   "deployment": {
     "MockUSDC": "0x9A676e781A523b5d0C0e43731313A708CB607508",
-    "HauskaContractFactory": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
-    "HauskaLicenseManager": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c",
-    "HauskaLicenseManagerV2": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
-    "HauskaLicenseNFT": "0x553BED26A78b94862e53945941e4ad6E4F2497da",
-    "HauskaLicenseMetadata": "0x59b670e9fA9D0A427751Af201D676719a970857b",
-    "HauskaAssetRegistry": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
-    "HauskaGroupManager": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
-    "HauskaRevenueDistributor": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed"
+    "EmpressaContractFactory": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+    "EmpressaLicenseManager": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c",
+    "EmpressaLicenseManagerV2": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
+    "EmpressaLicenseNFT": "0x553BED26A78b94862e53945941e4ad6E4F2497da",
+    "EmpressaLicenseMetadata": "0x59b670e9fA9D0A427751Af201D676719a970857b",
+    "EmpressaAssetRegistry": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+    "EmpressaGroupManager": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
+    "EmpressaRevenueDistributor": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed"
   },
   "organization": "0x524F04724632eED237cbA3c37272e018b3A7967e",
   "assetIds": [

@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./interfaces/IHauskaStructs.sol";
+import "./interfaces/IEmpressaStructs.sol";
 
 
-contract HauskaAssetNFT is ERC721, ERC721URIStorage, ERC721Burnable, AccessControl {
+contract EmpressaAssetNFT is ERC721, ERC721URIStorage, ERC721Burnable, AccessControl {
     using Counters for Counters.Counter;
 
     bytes32 public constant _c46ff91 = keccak256("_c46ff91");
@@ -34,7 +34,7 @@ contract HauskaAssetNFT is ERC721, ERC721URIStorage, ERC721Burnable, AccessContr
         address indexed to
     );
 
-    constructor() ERC721("Hauska Asset", "HAUSK") {
+    constructor() ERC721("Empressa Asset", "HAUSK") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(_c46ff91, msg.sender);
     }

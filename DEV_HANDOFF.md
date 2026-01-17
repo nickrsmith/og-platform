@@ -31,6 +31,14 @@ This document provides a comprehensive handoff for the O&G Platform MVP. The pro
 - ✅ Docker Production Config - Comprehensive `PRODUCTION_CONFIGURATION.md` with issues identified
 - ✅ API Documentation - Updated `BACKEND_FRONTEND_MAPPING.md` with all new endpoints
 
+**Priority 3 - Organization Roles Rename (100% Complete - January 16, 2026):**
+- ✅ Database migration created and applied (`20260116200000_rename_organization_roles`)
+- ✅ Backend code updated (12 files: schema, enums, services, controllers, interfaces, tests)
+- ✅ Frontend code updated (4 files: role displays, team management, onboarding)
+- ✅ Documentation updated (`BACKEND_FRONTEND_MAPPING.md`, `DEV_HANDOFF.md`)
+- **Role changes:** Admin → Manager, Creator → AssetManager, Verifier → Compliance
+- **Note:** On-chain role name remains `CREATOR_ROLE` for smart contract compatibility
+
 ---
 
 ## 📋 Table of Contents
@@ -74,11 +82,11 @@ This document provides a comprehensive handoff for the O&G Platform MVP. The pro
 
 ### Microservices
 
-1. **core-api** (Port 3000) - Main API service
-2. **admin-service** (Port 4242) - Admin dashboard API
-3. **blockchain-service** (Port 3005) - Blockchain operations
-4. **ipfs-service** (Port 3006) - IPFS file storage
-5. **kms-service** (Port 3004) - Key management (AWS KMS)
+1. **core-api** (Port 3000) - Main API service (defaults to 3002, but docker-compose sets to 3000)
+2. **admin-service** (Port 4243) - Admin dashboard API (defaults to 4243, can be set to 4242 via ADMIN_SERVICE_PORT)
+3. **blockchain-service** (Port 3003) - Blockchain operations (defaults to 3003)
+4. **ipfs-service** (Port 3004) - IPFS file storage (defaults to 3004)
+5. **kms-service** (Port 3001) - Key management (AWS KMS) (defaults to 3001)
 
 ### Infrastructure
 
@@ -248,7 +256,12 @@ cd backend
 pnpm prisma generate
 ```
 
-**Migration Status:** DataRoom migration file exists but not yet applied (`20260119000000_add_data_rooms`)
+**Migration Status:** 
+- ✅ Organization role rename migration applied (`20260116200000_rename_organization_roles`)
+  - Updated roles: Admin → Manager, Creator → AssetManager, Verifier → Compliance
+  - All code updated (backend, frontend, tests)
+  - Database enum and existing records updated
+- DataRoom migration file exists but not yet applied (`20260119000000_add_data_rooms`)
 
 ---
 
@@ -256,7 +269,7 @@ pnpm prisma generate
 
 ### Complete API Documentation
 
-See `BACKEND_FRONTEND_MAPPING.md` (1437 lines) for complete endpoint documentation.
+See `BACKEND_FRONTEND_MAPPING.md` (1311 lines) for complete endpoint documentation.
 
 ### Recently Implemented Endpoints
 
@@ -621,7 +634,7 @@ See `backend/PRODUCTION_CONFIGURATION.md` for detailed fixes.
 
 ### Primary Documentation
 
-- **`BACKEND_FRONTEND_MAPPING.md`** - Complete API endpoint mapping (1437 lines)
+- **`BACKEND_FRONTEND_MAPPING.md`** - Complete API endpoint mapping (1311 lines)
   - All endpoints with frontend usage
   - Request/response examples
   - Service references
@@ -681,10 +694,76 @@ See `backend/PRODUCTION_CONFIGURATION.md` for detailed fixes.
 ## 📝 Notes
 
 - **Prisma Client:** Must be regenerated after schema changes (`pnpm prisma generate`)
-- **Database Migrations:** All migration files exist, but DataRooms migration not yet applied
+- **Database Migrations:** 
+  - ✅ Organization role rename migration applied (`20260116200000_rename_organization_roles`)
+    - Roles updated: Admin → Manager, Creator → AssetManager, Verifier → Compliance
+  - DataRooms migration file exists but not yet applied (`20260119000000_add_data_rooms`)
+- **Organization Roles:** Updated to better reflect O&G platform use cases
+  - Manager (operations management), AssetManager (asset creation), Compliance (verification - future use)
+  - See `BACKEND_FRONTEND_MAPPING.md` for role permissions details
 - **Production Config:** Must fix `docker-compose.prod.yml` before deployment
 - **Simplify Integration:** Blocked awaiting API documentation
 - **Persona Testing:** Code complete, needs manual testing
+
+### Admin Panel Testing
+
+**Admin Authentication (Phase 1 Complete - Ready for Testing):**
+- ✅ Admin authentication system implemented
+- ✅ Admin login page: `/admin/login`
+- ✅ Admin routes protected with `AdminAuthGuard`
+- **Testing Steps:**
+  1. Create admin user: 
+     ```bash
+     cd backend
+     node scripts/create-admin.mjs admin@example.com Admin User
+     # Or with password:
+     node scripts/create-admin.mjs admin@example.com Admin User "YourSecurePassword123!"
+     ```
+     - Script will generate a CSV file with credentials if password not provided
+     - Password must be at least 12 characters (backend validation)
+     - **Example:** `node scripts/create-admin.mjs nick@centexblueprint.com Nick User "YourPassword123!"`
+  2. Start admin-service: 
+     ```bash
+     cd backend
+     pnpm nest start admin-service --watch
+     ```
+     - Runs on port **4243** by default (or 4242 if `ADMIN_SERVICE_PORT` env var is set)
+     - Check console for actual port: `Listening on http://[::]:4243` (or `[::]:4242` if env var is set)
+     - Verify service is running: `http://localhost:4243/auth/login` should respond (POST request)
+     - **Note:** `docker-compose.prod.yml` maps port 4242:4242, ensure `ADMIN_SERVICE_PORT=4242` is set if using production docker-compose
+  3. Configure frontend environment variable (if needed):
+     ```bash
+     # In frontend/.env or .env.local
+     VITE_ADMIN_API_URL=http://localhost:4243
+     ```
+     - Defaults to `http://localhost:4243` if not set
+     - **Important:** Port must match admin-service port (default is 4243)
+     - **Note:** If admin-service port is different, update this variable
+  4. Start frontend: `npm run dev` (usually runs on port 5173 or 5000)
+  5. Visit admin login: `http://localhost:5173/admin/login` (or `http://localhost:5000/admin/login`)
+  6. Login with admin credentials from CSV file or provided password
+  7. Verify redirect to `/admin` panel
+  8. Verify admin token is stored in localStorage as `admin_access_token`
+  9. Test logout and verify redirect back to `/admin/login`
+
+- **Troubleshooting "Failed to fetch" Error:**
+  - ✅ Verify admin-service is running: Check terminal for "Listening on..."
+  - ✅ Verify admin-service port: Default is 4243, check `ADMIN_SERVICE_PORT` env var (can be set to 4242 in production)
+  - ✅ Verify frontend API URL: Check `VITE_ADMIN_API_URL` matches admin-service port
+  - ✅ Check CORS: Admin-service should allow frontend origin in CORS config
+  - ✅ Check network tab: Verify API call is going to correct URL
+  - ✅ Verify credentials: Make sure admin user exists in database
+  - ✅ Check console: Look for detailed error messages in browser console
+- **Files Created:**
+  - `frontend/src/lib/api-admin.ts` - Admin API client
+  - `frontend/src/lib/services/admin-auth.service.ts` - Admin auth service
+  - `frontend/src/hooks/use-admin-auth.ts` - Admin auth hook
+  - `frontend/src/pages/admin-login.tsx` - Admin login page
+  - `frontend/src/components/guards/AdminAuthGuard.tsx` - Admin auth guard
+- **Environment Variable:** `VITE_ADMIN_API_URL=http://localhost:4243` (defaults to `http://localhost:4243`)
+  - **Note:** Admin-service runs on port **4243** by default (or 4242 if `ADMIN_SERVICE_PORT` env var is set)
+  - **Fix:** Updated frontend API client default to match backend port
+- **See:** `ADMIN_PANEL_AUTHENTICATION_PLAN.md` for complete implementation details
 
 ---
 

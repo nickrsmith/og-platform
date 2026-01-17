@@ -1,5 +1,12 @@
 # Backend/Frontend Mapping & User Flow Documentation
 
+**Last Updated:** January 16, 2026  
+**Version:** 1.2  
+**Recent Changes:**
+- Organization roles renamed - Admin→Manager, Creator→AssetManager, Verifier→Compliance (Migration: `20260116200000_rename_organization_roles`)
+- Admin panel documentation updated - Added admin-service endpoints (users, analytics, flagged/featured listings)
+- Admin panel frontend routes documented - Added admin panel routes and component mappings
+
 ## Overview
 
 This document provides a comprehensive mapping between the backend API endpoints and frontend components, along with detailed user flow logic for the O&G Platform MVP. The platform is built with a NestJS backend (core-api) and a React + Vite frontend, communicating via REST APIs with JWT authentication.
@@ -78,6 +85,72 @@ This document provides a comprehensive mapping between the backend API endpoints
 - JWT User ID (`sub`) as the primary identifier
 - Organization ID and Site Address for organization-scoped operations
 - Wallet Address (via user lookup) for blockchain transactions
+
+**Wallet Provisioning (All Users)**:
+**ALL users** (Category A, B, and C) automatically receive a wallet during registration/login:
+- Wallet is created via `kms-service` when user first logs in
+- Wallet address stored in `wallets` table linked to `userId`
+- Wallet is funded with gas and MockUSDC via faucet job (for development/testing)
+- **Category C users DO get wallets** because they need them to:
+  - Make offers on assets (on-chain operations)
+  - Participate in transactions/escrow (requires wallet address)
+  - Receive payments when selling assets (USDC distribution to wallet)
+  - Pay platform fees (if applicable)
+
+**Organization Roles** (Category A & B only):
+
+**Important:** Category C (Individual Mineral Owners) **DO NOT have organizations** and therefore **DO NOT have organization roles**. They operate independently as individual users.
+
+**Organization Roles** apply only to Category A & B organizations:
+- **Category A**: Major Operators & E&P Companies (have organizations with team roles)
+- **Category B**: Brokers & Independent Operators (have organizations with team roles)
+- **Category C**: Individual Mineral Owners (**NO organization, NO roles** - operate independently)
+
+**Category C Users:**
+- Don't belong to any organization
+- Don't have organization roles
+- Can create their own asset listings directly (no organization needed)
+- Have wallets for transactions (automatic provisioning)
+- Get 0% platform fees (free listings)
+- Operate as individual owners with full control over their own assets
+
+**Organization Roles (Category A & B only):**
+
+- **Principal** - Organization owner/leader (the person who created or is designated as the primary contact)
+  - Full organization management (can invite members, update organization settings)
+  - Can create assets/listings for the organization
+  - Receives blockchain permissions automatically when organization contract is deployed
+  - Only one Principal per organization (set at creation)
+
+- **Manager** - Organization administrator with management permissions (formerly "Admin")
+  - Can invite new members to the organization
+  - Can manage member roles (change roles, remove members)
+  - Can update organization profile and settings
+  - Can create assets/listings for the organization
+  - Typically used for department heads or trusted managers
+
+- **AssetManager** - Team member who can create and manage assets/listings (formerly "Creator")
+  - Can create new asset listings for the organization
+  - Can edit assets they've created (within organization's assets)
+  - Can manage offers and transactions on organization's assets
+  - Receives on-chain `CREATOR_ROLE` when invited to organizations with smart contracts
+  - Typical role for asset managers, deal makers, listing coordinators
+
+- **Compliance** - Can verify/review assets (formerly "Verifier", currently reserved for future use)
+  - Intended for internal asset verification workflows
+  - May be used for quality assurance or compliance review
+  - Currently not actively used in MVP workflows
+
+**Role Permissions Summary (Category A & B only)**:
+- **Invite Members**: Principal, Manager only (`@Roles(Role.Principal, Role.Manager)`)
+- **Manage Members**: Principal, Manager only
+- **Create Assets**: Principal, Manager, AssetManager
+- **Manage Organization Settings**: Principal, Manager only
+
+**Category C Permissions** (No organization roles):
+- Category C users can create/manage their own assets directly (no role needed)
+- Full control over their own listings and transactions
+- No team management (they're solo operators)
 
 ---
 
@@ -259,8 +332,8 @@ The blockchain-service handles all on-chain operations via job queues and event-
 - `INITIATE_ASSET_TRANSFER` - Initiate asset ownership transfer
 - `EXECUTE_ASSET_TRANSFER` - Execute asset ownership transfer
 - `CREATE_ASSET` - Create asset on-chain (for asset registry)
-- `GRANT_CREATOR_ROLE` - Grant creator role to user
-- `REVOKE_CREATOR_ROLE` - Revoke creator role from user
+- `GRANT_CREATOR_ROLE` - Grant asset manager role to user (on-chain role name remains CREATOR_ROLE for smart contract compatibility)
+- `REVOKE_CREATOR_ROLE` - Revoke asset manager role from user (on-chain role name remains CREATOR_ROLE for smart contract compatibility)
 
 **Controller**: `JobsController` (`backend/apps/blockchain-service/src/jobs/jobs.controller.ts`)
 
@@ -295,7 +368,7 @@ The blockchain-service handles all on-chain operations via job queues and event-
 
 ### Smart Contracts
 
-#### HauskaEscrow.sol
+#### EmpressaEscrow.sol
 
 **Purpose**: Holds funds in escrow during transaction lifecycle and distributes automatically.
 
@@ -304,7 +377,7 @@ The blockchain-service handles all on-chain operations via job queues and event-
 - `depositEarnest()` - Buyer deposits earnest money (USDC)
 - `completeDueDiligence()` - Marks due diligence complete
 - `fundTransaction()` - Buyer funds transaction (auto-closes when fully funded)
-- `closeEscrow()` - Closes escrow, distributes funds via HauskaRevenueDistributor
+- `closeEscrow()` - Closes escrow, distributes funds via EmpressaRevenueDistributor
 - `cancelEscrow()` - Cancels escrow, refunds buyer
 
 **Events**:
@@ -323,18 +396,18 @@ PENDING → EARNEST_DEPOSITED → DUE_DILIGENCE → FUNDING → CLOSED
                               CANCELLED / REFUNDED
 ```
 
-#### HauskaRevenueDistributor.sol
+#### EmpressaRevenueDistributor.sol
 
 **Purpose**: Distributes revenue with category-based fee calculation.
 
 **Fee Structure**:
-- **Category A & B**: 5% Hauska fee, 1% Integrator fee, 94% to creator
-- **Category C**: 0% fees, 100% to creator (free listing)
+- **Category A & B**: 5% Empressa fee, 1% Integrator fee, 94% to asset manager/organization
+- **Category C**: 0% fees, 100% to asset owner (free listing)
 
 **Key Function**:
 - `distributeRevenue()` - Called by escrow contract to distribute funds
 
-#### HauskaAssetTransfer.sol
+#### EmpressaAssetTransfer.sol
 
 **Purpose**: Manages asset ownership transfer on-chain.
 
@@ -356,7 +429,7 @@ PENDING → EARNEST_DEPOSITED → DUE_DILIGENCE → FUNDING → CLOSED
 
 **Flow**:
 1. **Blockchain Service** publishes events to RabbitMQ:
-   - Exchange: `hauska.events.topic`
+   - Exchange: `Empressa.events.topic`
    - Routing Key: `transactions.finalized.confirmed` or `transactions.finalized.failed`
    - Queue: `core-api.reconciliation.queue`
 
@@ -468,16 +541,18 @@ PENDING → EARNEST_DEPOSITED → DUE_DILIGENCE → FUNDING → CLOSED
 
 ---
 
-### AI Integration (`/api/v1/ai`) - Deferred for MVP
+### AI Integration (`/api/v1/ai`) ✅ Implemented
 
 | Endpoint | Method | Description | Frontend Usage |
 |----------|--------|-------------|----------------|
-| `/ai/analyze-document` | POST | Analyze document | Deferred |
-| `/ai/generate-valuation` | POST | Generate valuation | Deferred |
-| `/ai/assess-risk` | POST | Assess risk | Deferred |
-| `/ai/generate-listing` | POST | Generate listing | Deferred |
+| `/ai/analyze-document` | POST | Analyze document (AI document analysis) | Document analysis flow |
+| `/ai/generate-valuation` | POST | Generate asset valuation (AI-powered) | Asset valuation flow |
+| `/ai/assess-risk` | POST | Assess asset risk (AI-powered) | Risk assessment flow |
+| `/ai/generate-listing` | POST | Generate listing description (AI-powered) | Listing creation flow |
 
 **Controller**: `AiController` (`backend/apps/core-api/src/ai/ai.controller.ts`)
+
+**Note:** AI endpoints are implemented but may not be actively used in all flows. Integration depends on AI service configuration.
 
 **Status**: Deferred per MVP scope
 
@@ -536,9 +611,17 @@ PENDING → EARNEST_DEPOSITED → DUE_DILIGENCE → FUNDING → CLOSED
 
 ---
 
-### Admin Service (`http://localhost:4242`)
+### Admin Service (`http://localhost:4243`)
 
-Separate service for admin dashboard operations. Not part of main user-facing API.
+**Note:** Default port is 4243 (configurable via `ADMIN_SERVICE_PORT` env var).
+
+Separate service for admin dashboard operations. Not part of main user-facing API. All endpoints (except `/health` and `/users/p2p/:peerId`) require admin authentication via `AdminJwtAuthGuard`.
+
+**Frontend Integration:**
+- Admin panel is integrated into main React app at `/admin/*` routes
+- Uses separate API client: `frontend/src/lib/api-admin.ts`
+- Uses separate auth service: `frontend/src/lib/services/admin-auth.service.ts`
+- Admin token stored separately: `localStorage.getItem('admin_access_token')`
 
 #### Admin Authentication (`/auth`)
 
@@ -551,13 +634,13 @@ Separate service for admin dashboard operations. Not part of main user-facing AP
 
 **Controller**: `AuthController` (`backend/apps/admin-service/src/auth/auth.controller.ts`)
 
-#### Admin Releases (`/releases`)
+#### Admin Releases - Verification (`/releases`)
 
 | Endpoint | Method | Description | Usage |
 |----------|--------|-------------|-------|
 | `/releases/pending-verifications` | GET | List assets pending verification | Admin verification queue |
 | `/releases/:id/approve-verification` | POST | Approve asset verification | Admin approves asset |
-| `/releases/:id/reject-verification` | POST | Reject asset verification | Admin rejects asset |
+| `/releases/:id/reject-verification` | POST | Reject asset verification (with optional reason) | Admin rejects asset |
 | `/releases/:id` | DELETE | Delete release | Admin deletes asset |
 
 **Controller**: `ReleasesController` (`backend/apps/admin-service/src/releases/releases.controller.ts`)
@@ -570,7 +653,7 @@ Separate service for admin dashboard operations. Not part of main user-facing AP
 | `/organizations` | POST | Create organization (by admin) | Admin creates org |
 | `/organizations/requests` | GET | List pending org requests | Admin approval queue |
 | `/organizations/requests/:id/approve` | POST | Approve org request | Admin approves org |
-| `/organizations/requests/:id/reject` | POST | Reject org request | Admin rejects org |
+| `/organizations/requests/:id/reject` | POST | Reject org request (with optional reason) | Admin rejects org |
 | `/organizations/:id` | GET | Get organization details | Admin org details |
 | `/organizations/:orgId/members` | GET | List org members | Admin member management |
 | `/organizations/:orgId/members/invite` | POST | Invite member | Admin invites member |
@@ -578,6 +661,112 @@ Separate service for admin dashboard operations. Not part of main user-facing AP
 | `/organizations/:orgId/members/:userId` | DELETE | Remove member | Admin removes member |
 
 **Controller**: `OrganizationsController` (`backend/apps/admin-service/src/organizations/organizations.controller.ts`)
+
+#### Admin Users (`/users`)
+
+| Endpoint | Method | Description | Usage |
+|----------|--------|-------------|-------|
+| `/users` | GET | List all users (with filters: status, search) | Admin user management |
+| `/users/:id` | PATCH | Update user (firstName, lastName, category) | Admin edits user |
+| `/users/:id/suspend` | PATCH | Suspend user account | Admin suspends user |
+| `/users/:id/reactivate` | PATCH | Reactivate user account | Admin reactivates user |
+| `/users/p2p/:peerId` | GET | Get user by P2P peer ID (public) | P2P user resolution |
+
+**Controller**: `UsersController` (`backend/apps/admin-service/src/users/users.controller.ts`)
+
+**Query Parameters:**
+- `page` (number): Page number (default: 1)
+- `limit` (number): Items per page (default: 50)
+- `status` (string): Filter by status ('all', 'active', 'inactive')
+- `search` (string): Search by email, firstName, or lastName
+
+**Response Format:**
+```typescript
+{
+  items: Array<{
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    status: 'active' | 'suspended';
+    category: 'A' | 'B' | 'C' | null;
+    verified: boolean;
+    joinDate: string;
+    lastActive: string | null;
+  }>;
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+```
+
+#### Admin Releases - Content Management (`/releases`)
+
+| Endpoint | Method | Description | Usage |
+|----------|--------|-------------|-------|
+| `/releases/flagged` | GET | List flagged listings | Admin content moderation |
+| `/releases/:id/flag` | POST | Flag a listing (with reason) | Admin flags listing |
+| `/releases/:id/unflag` | POST | Unflag a listing | Admin unflags listing |
+| `/releases/featured` | GET | List featured listings | Admin featured content |
+| `/releases/:id/feature` | POST | Feature a listing | Admin features listing |
+| `/releases/:id/unfeature` | POST | Unfeature a listing | Admin unfeatures listing |
+
+**Controller**: `ReleasesController` (`backend/apps/admin-service/src/releases/releases.controller.ts`)
+
+**Note:** Flagged and featured endpoints are placeholder implementations until `flagged` and `featured` fields are added to the Release schema.
+
+#### Admin Analytics (`/analytics`)
+
+| Endpoint | Method | Description | Usage |
+|----------|--------|-------------|-------|
+| `/analytics/metrics` | GET | Platform metrics (users, orgs, releases, transactions) | Admin analytics dashboard |
+| `/analytics/revenue` | GET | Revenue data (placeholder) | Admin revenue analytics |
+| `/analytics/funnel` | GET | User conversion funnel data | Admin funnel visualization |
+| `/analytics/users-by-category` | GET | User distribution by category (A, B, C) | Admin user analytics |
+
+**Controller**: `AnalyticsController` (`backend/apps/admin-service/src/analytics/analytics.controller.ts`)
+
+**Response Examples:**
+
+`/analytics/metrics`:
+```typescript
+{
+  users: {
+    total: number;
+    active: number;
+    verified: number;
+    pending: number;
+  };
+  organizations: {
+    total: number;
+    active: number;
+    unclaimed: number;
+  };
+  releases: { total: number };
+  transactions: { total: number };
+}
+```
+
+`/analytics/funnel`:
+```typescript
+{
+  stages: Array<{
+    name: string;
+    count: number;
+    conversionRate: number;
+  }>;
+}
+```
+
+`/analytics/users-by-category`:
+```typescript
+{
+  A: number; // Major Operators
+  B: number; // Brokers
+  C: number; // Individual Mineral Owners
+}
+```
 
 ---
 
@@ -751,6 +940,37 @@ Internal service for file storage and IPFS pinning. Processes jobs asynchronousl
 
 ---
 
+### Admin Panel (Admin Users Only)
+
+| Route | Component | Description | Backend Endpoints |
+|-------|-----------|-------------|-------------------|
+| `/admin/login` | `admin-login.tsx` | Admin login page | `POST /auth/login` (admin-service) |
+| `/admin` | `admin.tsx` | Admin dashboard (main panel) | Multiple admin-service endpoints |
+| `/admin/users` | `admin.tsx` (Users tab) | User management | `GET /users`, `PATCH /users/:id`, `PATCH /users/:id/suspend`, `PATCH /users/:id/reactivate` |
+| `/admin/verification` | `admin.tsx` (Verification tab) | Asset verification queue | `GET /releases/pending-verifications`, `POST /releases/:id/approve-verification`, `POST /releases/:id/reject-verification` |
+| `/admin/organizations` | `admin.tsx` (Organizations tab) | Organization management | `GET /organizations`, `GET /organizations/requests`, `POST /organizations/requests/:id/approve`, `POST /organizations/requests/:id/reject` |
+| `/admin/content` | `admin.tsx` (Content tab) | Content moderation | `GET /releases/flagged`, `GET /releases/featured`, `POST /releases/:id/flag`, `POST /releases/:id/feature` |
+| `/admin/analytics` | `admin.tsx` (Analytics tab) | Platform analytics | `GET /analytics/metrics`, `GET /analytics/revenue`, `GET /analytics/funnel`, `GET /analytics/users-by-category` |
+
+**Authentication:**
+- Admin panel uses separate authentication from user authentication
+- Admin token stored in `localStorage` as `admin_access_token`
+- All admin routes (except `/admin/login`) are protected by `AdminAuthGuard`
+- Admin authentication flow: Email/Password → JWT token from `admin-service`
+
+**API Client:**
+- Uses separate API client: `frontend/src/lib/api-admin.ts`
+- Default base URL: `http://localhost:4243` (configurable via `VITE_ADMIN_API_URL`)
+- All requests include `Authorization: Bearer <admin_access_token>`
+
+**Components:**
+- `AdminAuthGuard.tsx` - Route guard for admin routes
+- `use-admin-auth.ts` - React hook for admin authentication state
+- `admin-auth.service.ts` - Service for admin authentication operations
+- `admin.service.ts` - Service for all admin operations (users, orgs, releases, analytics)
+
+---
+
 ## User Flow Logic
 
 ### 1. Registration & Onboarding Flow
@@ -915,8 +1135,8 @@ Internal service for file storage and IPFS pinning. Processes jobs asynchronousl
      → Seller: `POST /transactions/:id/close`
      → **Blockchain**: core-api creates `CLOSE_ESCROW` job
      → **Blockchain**: Calls `escrow.closeEscrow()`
-     → **Blockchain**: Escrow calls `HauskaRevenueDistributor.distributeRevenue()`
-     → **Blockchain**: Funds distributed: Creator (94%), Hauska (5%), Integrator (1%)
+     → **Blockchain**: Escrow calls `EmpressaRevenueDistributor.distributeRevenue()`
+     → **Blockchain**: Funds distributed: Seller/Organization (94%), Empressa (5%), Integrator (1%)
      → **Blockchain**: Event `EscrowClosed` emitted
      → **Reconciliation**: RabbitMQ event → core-api updates transaction
      → **Blockchain**: core-api creates `INITIATE_ASSET_TRANSFER` job
@@ -1045,18 +1265,18 @@ NOT_STARTED → NOTARY_IN_PROGRESS → NOTARY_COMPLETED → SUBMITTED → PENDIN
 ```
 1. Transaction closes
    → Backend calculates revenue split: `POST /revenue/calculate-split`
-   → Splits: Creator (seller), Hauska fee, Integrator fee
+   → Splits: Seller/Organization, Empressa fee, Integrator fee
    → Fee structure from: `GET /revenue/fee-structure/:orgContractAddress`
 
 2. On-chain distribution (automatic via escrow)
    → When `escrow.closeEscrow()` is called:
-   → Escrow contract automatically calls `HauskaRevenueDistributor.distributeRevenue()`
+   → Escrow contract automatically calls `EmpressaRevenueDistributor.distributeRevenue()`
    → Revenue distributor calculates fees based on asset category:
-     - Category A & B: 5% Hauska, 1% Integrator, 94% Creator
-     - Category C: 0% fees, 100% Creator
+     - Category A & B: 5% Empressa, 1% Integrator, 94% to seller/organization
+     - Category C: 0% fees, 100% to seller/asset owner
    → Funds distributed to:
-     - Creator wallet (seller)
-     - Hauska treasury wallet
+     - Seller/organization wallet
+     - Empressa treasury wallet
      - Integrator wallet (if applicable)
    → Event `EscrowClosed` emitted with distribution details
    → RabbitMQ event → core-api reconciliation updates database
@@ -1116,7 +1336,7 @@ All API calls go through service layer in `frontend/src/lib/services/`:
 - Swagger docs: `/api/v1/docs`
 
 **Other Services**:
-- **admin-service**: Port 4242 (admin operations)
+- **admin-service**: Port 4243 (admin operations, default, configurable via `ADMIN_SERVICE_PORT`)
 - **kms-service**: Port 3001 (key management)
 - **blockchain-service**: Port 3003 (on-chain operations)
 - **ipfs-service**: Port 3004 (file storage)
@@ -1291,7 +1511,7 @@ Navigation is category-specific (see `navigation-config.tsx`):
 6. **Blockchain**: Smart contracts for escrow/settlement (required for MVP)
    - Ethereum-compatible chain
    - USDC token for payments
-   - Smart contracts: HauskaEscrow, HauskaRevenueDistributor, HauskaAssetTransfer
+   - Smart contracts: EmpressaEscrow, EmpressaRevenueDistributor, EmpressaAssetTransfer
 7. **AWS KMS**: Key management (required for blockchain)
    - Envelope encryption for wallet private keys
    - Multiple KMS keys for distributed risk
@@ -1362,8 +1582,8 @@ Navigation is category-specific (see `navigation-config.tsx`):
 
 **Production**:
 - Frontend: Deployed (Netlify/Vercel)
-- Backend: `https://api.hauska.io/api/v1`
-- Swagger: `https://api.hauska.io/api/v1/docs`
+- Backend: `https://api.Empressa.io/api/v1`
+- Swagger: `https://api.Empressa.io/api/v1/docs`
 
 ---
 
@@ -1421,7 +1641,7 @@ This document maps all backend API endpoints to their corresponding frontend com
 ### Blockchain Integration Highlights
 
 - **Escrow Management**: All transaction funds held in smart contract escrow
-- **Automatic Settlement**: Revenue distribution happens automatically on-chain via `HauskaRevenueDistributor`
+- **Automatic Settlement**: Revenue distribution happens automatically on-chain via `EmpressaRevenueDistributor`
 - **Event-Driven**: RabbitMQ events ensure database stays in sync with blockchain state
 - **Job Queue System**: BullMQ handles async blockchain operations with retries
 - **Key Management**: KMS service securely manages signing keys
@@ -1429,8 +1649,8 @@ This document maps all backend API endpoints to their corresponding frontend com
 
 ### Smart Contracts
 
-- **HauskaEscrow**: Manages transaction escrow and fund distribution
-- **HauskaRevenueDistributor**: Handles fee calculation and revenue distribution
-- **HauskaAssetTransfer**: Manages asset ownership transfer on-chain
+- **EmpressaEscrow**: Manages transaction escrow and fund distribution
+- **EmpressaRevenueDistributor**: Handles fee calculation and revenue distribution
+- **EmpressaAssetTransfer**: Manages asset ownership transfer on-chain
 
 All flows include proper authentication gates, validation, error handling, and blockchain integration as documented above.

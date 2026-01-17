@@ -10,7 +10,7 @@ This document summarizes the Escrow and Asset Transfer smart contracts that enab
 
 ## Contracts Created
 
-### 1. HauskaEscrow.sol
+### 1. EmpressaEscrow.sol
 
 **Purpose:** Holds funds in escrow during transaction lifecycle and distributes them automatically when conditions are met.
 
@@ -18,7 +18,7 @@ This document summarizes the Escrow and Asset Transfer smart contracts that enab
 - ✅ Secure fund holding in USDC
 - ✅ Earnest money deposit support
 - ✅ Due diligence workflow
-- ✅ Automatic fee distribution via HauskaRevenueDistributor
+- ✅ Automatic fee distribution via EmpressaRevenueDistributor
 - ✅ Category-based fee calculation (Category C = 0% fees)
 - ✅ Transaction lifecycle management
 - ✅ Refund capability for cancelled transactions
@@ -45,7 +45,7 @@ Receives funding/payment from buyer. Auto-closes when fully funded.
 #### `closeEscrow()`
 Closes escrow and distributes funds:
 - Calculates fees based on asset category
-- Distributes through HauskaRevenueDistributor
+- Distributes through EmpressaRevenueDistributor
 - Handles Category C free listings (0% fees)
 - Emits settlement events
 
@@ -60,12 +60,12 @@ PENDING → EARNEST_DEPOSITED → DUE_DILIGENCE → FUNDING → CLOSED
 ```
 
 **Integration with Revenue Distributor:**
-- Automatically calls `HauskaRevenueDistributor.distributeRevenue()`
+- Automatically calls `EmpressaRevenueDistributor.distributeRevenue()`
 - Passes asset category for fee calculation
 - Category C assets: 0% fees (free listing)
-- Category A/B assets: Normal fee distribution (5% Hauska, 1% Integrator, 94% Creator)
+- Category A/B assets: Normal fee distribution (5% Empressa, 1% Integrator, 94% Creator)
 
-### 2. HauskaAssetTransfer.sol
+### 2. EmpressaAssetTransfer.sol
 
 **Purpose:** Handles on-chain asset ownership transfers during transaction settlement.
 
@@ -105,13 +105,13 @@ CANCELLED
 
 ### Dependencies
 
-**HauskaEscrow:**
+**EmpressaEscrow:**
 - `IERC20` (USDC token)
-- `HauskaRevenueDistributor` (fee distribution)
-- `HauskaAssetRegistry` (asset category lookup)
+- `EmpressaRevenueDistributor` (fee distribution)
+- `EmpressaAssetRegistry` (asset category lookup)
 
-**HauskaAssetTransfer:**
-- `HauskaAssetRegistry` (asset ownership transfer)
+**EmpressaAssetTransfer:**
+- `EmpressaAssetRegistry` (asset ownership transfer)
 
 ### Access Control
 
@@ -151,7 +151,7 @@ Both contracts use OpenZeppelin's `AccessControl`:
 
 5. **Settlement (Automatic)**
    - `closeEscrow()` called (automatically or manually)
-   - Funds distributed via `HauskaRevenueDistributor`
+   - Funds distributed via `EmpressaRevenueDistributor`
    - Fees calculated based on asset category
    - Status: `FUNDING` → `CLOSED`
 
@@ -165,12 +165,12 @@ Both contracts use OpenZeppelin's `AccessControl`:
 ### Category-Based Fees
 
 **Category A & B:**
-- Hauska Fee: 5% (500 basis points)
+- Empressa Fee: 5% (500 basis points)
 - Integrator Fee: 1% (100 basis points)
 - Creator Receives: 94% (9400 basis points)
 
 **Category C (Free Listing):**
-- Hauska Fee: 0%
+- Empressa Fee: 0%
 - Integrator Fee: 0%
 - Creator Receives: 100%
 
@@ -183,19 +183,19 @@ Escrow holds funds
     ↓
 closeEscrow() called
     ↓
-HauskaRevenueDistributor.distributeRevenue()
+EmpressaRevenueDistributor.distributeRevenue()
     ↓
 Fees calculated (based on category)
     ↓
 Funds distributed:
   - Creator: $94,000 (or $100,000 for Category C)
-  - Hauska: $5,000 (or $0 for Category C)
+  - Empressa: $5,000 (or $0 for Category C)
   - Integrator: $1,000 (or $0 for Category C)
 ```
 
 ## Events
 
-### HauskaEscrow Events
+### EmpressaEscrow Events
 
 - `EscrowCreated` - New escrow created
 - `EarnestDeposited` - Earnest money deposited
@@ -205,7 +205,7 @@ Funds distributed:
 - `EscrowCancelled` - Escrow cancelled
 - `EscrowRefunded` - Funds refunded to buyer
 
-### HauskaAssetTransfer Events
+### EmpressaAssetTransfer Events
 
 - `TransferInitiated` - Transfer initiated
 - `AssetTransferred` - Asset ownership transferred
@@ -249,19 +249,19 @@ Funds distributed:
 
 ### Constructor Parameters
 
-**HauskaEscrow:**
+**EmpressaEscrow:**
 ```solidity
 constructor(
     address _usdcToken,              // USDC token address
-    address _revenueDistributor,     // HauskaRevenueDistributor address
-    address _assetRegistry           // HauskaAssetRegistry address
+    address _revenueDistributor,     // EmpressaRevenueDistributor address
+    address _assetRegistry           // EmpressaAssetRegistry address
 )
 ```
 
-**HauskaAssetTransfer:**
+**EmpressaAssetTransfer:**
 ```solidity
 constructor(
-    address _assetRegistry           // HauskaAssetRegistry address
+    address _assetRegistry           // EmpressaAssetRegistry address
 )
 ```
 
@@ -325,15 +325,15 @@ constructor(
 
 ## Files Created
 
-1. `contracts/HauskaEscrow.sol` - Escrow contract
-2. `contracts/HauskaAssetTransfer.sol` - Asset transfer contract
-3. `contracts/interfaces/IHauskaContracts.sol` - Updated with new interfaces
+1. `contracts/EmpressaEscrow.sol` - Escrow contract
+2. `contracts/EmpressaAssetTransfer.sol` - Asset transfer contract
+3. `contracts/interfaces/IEmpressaContracts.sol` - Updated with new interfaces
 
 ## Notes
 
-- Escrow integrates seamlessly with existing `HauskaRevenueDistributor`
+- Escrow integrates seamlessly with existing `EmpressaRevenueDistributor`
 - Category C free listing logic is enforced on-chain
-- Asset transfers use existing `HauskaAssetRegistry` infrastructure
+- Asset transfers use existing `EmpressaAssetRegistry` infrastructure
 - All operations are permissioned and auditable
 - Events provide full transaction history
 

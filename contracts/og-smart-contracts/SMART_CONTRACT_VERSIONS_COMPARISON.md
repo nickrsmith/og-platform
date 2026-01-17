@@ -118,14 +118,14 @@ mapping(address => uint256) public pendingCreatorEarnings; // Some public mappin
 - Some are partially obfuscated (e.g., "Invalid _v7b202d" instead of "Invalid factory")
 
 ### 4. Event Parameters
-- Some event parameters keep readable names (e.g., `hauskaAmount`, `integratorAmount`)
+- Some event parameters keep readable names (e.g., `EmpressaAmount`, `integratorAmount`)
 - Event names themselves are often obfuscated
 
 ### 5. Interface Compliance
 - Both versions must implement the same interfaces
 - External function signatures that match interfaces may remain readable
 
-## Detailed Comparison: HauskaRevenueDistributor
+## Detailed Comparison: EmpressaRevenueDistributor
 
 ### Function Mapping
 
@@ -159,12 +159,12 @@ mapping(address => uint256) public pendingCreatorEarnings; // Some public mappin
 | `assetId` | `_v9d8e96` | uint256 | Asset ID (parameter) |
 | `amount` | `_v9cb6ff` | uint256 | Amount (parameter) |
 | `ownerAmount` | `_vcf4b0b` | uint256 | Owner/creator amount |
-| `hauskaFee` | `_vf0d665` | uint256 | Hauska platform fee |
+| `EmpressaFee` | `_vf0d665` | uint256 | Empressa platform fee |
 | `integratorFee` | `_v9aa481` | uint256 | Integrator fee |
-| `hauskaFeePct` | `_v3d6202` | uint32 | Hauska fee percentage |
+| `EmpressaFeePct` | `_v3d6202` | uint32 | Empressa fee percentage |
 | `integratorFeePct` | `_v3055c2` | uint32 | Integrator fee percentage |
 
-## Detailed Comparison: HauskaOrgContract
+## Detailed Comparison: EmpressaOrgContract
 
 ### Function Mapping
 
@@ -278,7 +278,7 @@ mapping(address => uint256) public pendingCreatorEarnings; // Some public mappin
    - If only for development: No
 
 2. **How do we generate obfuscated version?**
-   - Need to find/use the obfuscation tool used by Hauska
+   - Need to find/use the obfuscation tool used by Empressa
    - Or manually obfuscate following the same pattern
 
 3. **Should we maintain both versions?**

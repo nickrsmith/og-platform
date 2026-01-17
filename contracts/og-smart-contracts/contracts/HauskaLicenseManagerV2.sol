@@ -5,22 +5,22 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./interfaces/IHauskaContracts.sol";
-import "./interfaces/IHauskaStructs.sol";
-import "./HauskaLicenseNFT.sol";
+import "./interfaces/IEmpressaContracts.sol";
+import "./interfaces/IEmpressaStructs.sol";
+import "./EmpressaLicenseNFT.sol";
 
 /**
- * @title HauskaLicenseManagerV2
+ * @title EmpressaLicenseManagerV2
  * @dev Enhanced license management using ERC-721 NFTs
  */
-contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicenseManager {
+contract EmpressaLicenseManagerV2 is AccessControl, ReentrancyGuard, IEmpressaLicenseManager {
     using SafeERC20 for IERC20;
     
     bytes32 public constant ORG_CONTRACT_ROLE = keccak256("ORG_CONTRACT_ROLE");
     
     address public immutable factoryContract;
     address public immutable usdcToken;
-    HauskaLicenseNFT public immutable licenseNFT;
+    EmpressaLicenseNFT public immutable licenseNFT;
     
     // Events
     event LicenseGranted(
@@ -56,7 +56,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         usdcToken = _usdcToken;
         
         // Deploy the NFT contract
-        licenseNFT = new HauskaLicenseNFT();
+        licenseNFT = new EmpressaLicenseNFT();
         
         // Grant this contract minter role on the NFT
         licenseNFT.grantRole(licenseNFT.MINTER_ROLE(), address(this));
@@ -72,7 +72,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         address orgContract,
         uint256 assetId,
         address licensee,
-        IHauskaStructs.LicensePermissions[] memory permissions,
+        IEmpressaStructs.LicensePermissions[] memory permissions,
         uint256 resellerFee
     ) external returns (uint256) {
         return licenseAssetWithDuration(orgContract, assetId, licensee, permissions, resellerFee, 0);
@@ -85,7 +85,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         address orgContract,
         uint256 assetId,
         address licensee,
-        IHauskaStructs.LicensePermissions[] memory permissions,
+        IEmpressaStructs.LicensePermissions[] memory permissions,
         uint256 resellerFee,
         uint256 duration
     ) public nonReentrant returns (uint256) {
@@ -94,10 +94,10 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         require(!licenseNFT.hasLicense(orgContract, assetId, licensee), "Already licensed");
         
         // Get asset details from registry
-        IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-            IHauskaOrgContract(orgContract).assetRegistry()
+        IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+            IEmpressaOrgContract(orgContract).assetRegistry()
         );
-        IHauskaStructs.VerifiedDigitalAsset memory asset = registry.getAsset(orgContract, assetId);
+        IEmpressaStructs.VerifiedDigitalAsset memory asset = registry.getAsset(orgContract, assetId);
         
         require(asset.assetId > 0, "Asset does not exist");
         require(asset.isVerified, "Asset not verified");
@@ -112,8 +112,8 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         // Calculate permissions bitmask
         uint8 permByte = 0;
         for (uint i = 0; i < permissions.length; i++) {
-            if (permissions[i] == IHauskaStructs.LicensePermissions.View) permByte |= 2;
-            if (permissions[i] == IHauskaStructs.LicensePermissions.Resell) permByte |= 1;
+            if (permissions[i] == IEmpressaStructs.LicensePermissions.View) permByte |= 2;
+            if (permissions[i] == IEmpressaStructs.LicensePermissions.Resell) permByte |= 1;
         }
         if (permByte == 0) permByte = 2; // Default to View
         
@@ -143,8 +143,8 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         uint256 existingLicenseId
     ) external returns (uint256) {
         // For backward compatibility, we'll delegate to the enhanced version
-        IHauskaStructs.LicensePermissions[] memory permissions = new IHauskaStructs.LicensePermissions[](1);
-        permissions[0] = IHauskaStructs.LicensePermissions.View;
+        IEmpressaStructs.LicensePermissions[] memory permissions = new IEmpressaStructs.LicensePermissions[](1);
+        permissions[0] = IEmpressaStructs.LicensePermissions.View;
         return relicenseAssetEnhanced(existingLicenseId, licensee, permissions, 0);
     }
     
@@ -154,14 +154,14 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
     function relicenseAssetEnhanced(
         uint256 originalTokenId,
         address newLicensee,
-        IHauskaStructs.LicensePermissions[] memory newPermissions,
+        IEmpressaStructs.LicensePermissions[] memory newPermissions,
         uint256 newResellerFee
     ) public nonReentrant returns (uint256) {
         require(licenseNFT.ownerOf(originalTokenId) == msg.sender, "Not license owner");
         require(newLicensee != address(0), "Invalid licensee");
         require(licenseNFT.isLicenseValid(originalTokenId), "License not valid");
         
-        HauskaLicenseNFT.LicenseData memory originalLicense = licenseNFT.getLicenseDetails(originalTokenId);
+        EmpressaLicenseNFT.LicenseData memory originalLicense = licenseNFT.getLicenseDetails(originalTokenId);
         
         // Check resell permission
         require(originalLicense.permissions & 1 == 1, "No resell permission");
@@ -183,8 +183,8 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         // Calculate new permissions
         uint8 permByte = 0;
         for (uint i = 0; i < newPermissions.length; i++) {
-            if (newPermissions[i] == IHauskaStructs.LicensePermissions.View) permByte |= 2;
-            if (newPermissions[i] == IHauskaStructs.LicensePermissions.Resell) permByte |= 1;
+            if (newPermissions[i] == IEmpressaStructs.LicensePermissions.View) permByte |= 2;
+            if (newPermissions[i] == IEmpressaStructs.LicensePermissions.Resell) permByte |= 1;
         }
         if (permByte == 0) permByte = 2;
         
@@ -211,16 +211,16 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         address orgContract,
         uint256 groupId,
         address licensee,
-        IHauskaStructs.LicensePermissions[] memory permissions,
+        IEmpressaStructs.LicensePermissions[] memory permissions,
         uint256 /*resellerFee*/
     ) external nonReentrant returns (uint256[] memory) {
         require(hasRole(ORG_CONTRACT_ROLE, msg.sender), "Not authorized");
         require(licensee != address(0), "Invalid licensee");
         
-        IHauskaGroupManager groupManager = IHauskaGroupManager(
-            IHauskaOrgContract(orgContract).groupManager()
+        IEmpressaGroupManager groupManager = IEmpressaGroupManager(
+            IEmpressaOrgContract(orgContract).groupManager()
         );
-        IHauskaStructs.AssetGroup memory group = groupManager.getGroup(orgContract, groupId);
+        IEmpressaStructs.AssetGroup memory group = groupManager.getGroup(orgContract, groupId);
         
         require(group.groupId > 0, "Group does not exist");
         require(group.members.length > 0, "Empty group");
@@ -241,10 +241,10 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
             }
             
             // Get asset details
-            IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-                IHauskaOrgContract(orgContract).assetRegistry()
+            IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+                IEmpressaOrgContract(orgContract).assetRegistry()
             );
-            IHauskaStructs.VerifiedDigitalAsset memory asset = registry.getAsset(orgContract, group.members[i]);
+            IEmpressaStructs.VerifiedDigitalAsset memory asset = registry.getAsset(orgContract, group.members[i]);
             
             require(asset.isVerified, "Asset not verified");
             require(asset.canBeLicensed, "Asset cannot be licensed");
@@ -255,8 +255,8 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
             // Calculate permissions
             uint8 permByte = 0;
             for (uint j = 0; j < permissions.length; j++) {
-                if (permissions[j] == IHauskaStructs.LicensePermissions.View) permByte |= 2;
-                if (permissions[j] == IHauskaStructs.LicensePermissions.Resell) permByte |= 1;
+                if (permissions[j] == IEmpressaStructs.LicensePermissions.View) permByte |= 2;
+                if (permissions[j] == IEmpressaStructs.LicensePermissions.Resell) permByte |= 1;
             }
             if (permByte == 0) permByte = 2;
             
@@ -284,14 +284,14 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         require(licenseNFT.ownerOf(tokenId) == msg.sender, "Not license owner");
         require(additionalDuration > 0, "Invalid duration");
         
-        HauskaLicenseNFT.LicenseData memory license = licenseNFT.getLicenseDetails(tokenId);
+        EmpressaLicenseNFT.LicenseData memory license = licenseNFT.getLicenseDetails(tokenId);
         require(license.expirationTime > 0, "License is perpetual");
         
         // Get current asset price for renewal
-        IHauskaAssetRegistry registry = IHauskaAssetRegistry(
-            IHauskaOrgContract(license.orgContract).assetRegistry()
+        IEmpressaAssetRegistry registry = IEmpressaAssetRegistry(
+            IEmpressaOrgContract(license.orgContract).assetRegistry()
         );
-        IHauskaStructs.VerifiedDigitalAsset memory asset = registry.getAsset(license.orgContract, license.assetId);
+        IEmpressaStructs.VerifiedDigitalAsset memory asset = registry.getAsset(license.orgContract, license.assetId);
         
         // Transfer renewal fee
         IERC20(usdcToken).safeTransferFrom(msg.sender, address(this), asset.price);
@@ -336,7 +336,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         // Filter licenses for specific org
         uint256 count = 0;
         for (uint256 i = 0; i < allLicenses.length; i++) {
-            HauskaLicenseNFT.LicenseData memory license = licenseNFT.getLicenseDetails(allLicenses[i]);
+            EmpressaLicenseNFT.LicenseData memory license = licenseNFT.getLicenseDetails(allLicenses[i]);
             if (license.orgContract == orgContract) {
                 count++;
             }
@@ -345,7 +345,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         uint256[] memory orgLicenses = new uint256[](count);
         uint256 index = 0;
         for (uint256 i = 0; i < allLicenses.length; i++) {
-            HauskaLicenseNFT.LicenseData memory license = licenseNFT.getLicenseDetails(allLicenses[i]);
+            EmpressaLicenseNFT.LicenseData memory license = licenseNFT.getLicenseDetails(allLicenses[i]);
             if (license.orgContract == orgContract) {
                 orgLicenses[index] = allLicenses[i];
                 index++;
@@ -376,7 +376,7 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
             address orgContract
         ) 
     {
-        HauskaLicenseNFT.LicenseData memory license = licenseNFT.getLicenseDetails(tokenId);
+        EmpressaLicenseNFT.LicenseData memory license = licenseNFT.getLicenseDetails(tokenId);
         address owner = licenseNFT.ownerOf(tokenId);
         
         return (
@@ -398,14 +398,14 @@ contract HauskaLicenseManagerV2 is AccessControl, ReentrancyGuard, IHauskaLicens
         uint256 amount,
         address assetOwner
     ) private {
-        address revenueDistributor = IHauskaOrgContract(orgContract).revenueDistributor();
+        address revenueDistributor = IEmpressaOrgContract(orgContract).revenueDistributor();
         
         if (revenueDistributor != address(0)) {
-            address integrationPartner = IHauskaOrgContract(orgContract).integrationPartner();
+            address integrationPartner = IEmpressaOrgContract(orgContract).integrationPartner();
             
             IERC20(usdcToken).safeApprove(revenueDistributor, amount);
             
-            IHauskaRevenueDistributor(revenueDistributor).distributeRevenue(
+            IEmpressaRevenueDistributor(revenueDistributor).distributeRevenue(
                 assetId,
                 licensee,
                 address(this),
