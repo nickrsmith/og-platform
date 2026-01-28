@@ -25,12 +25,15 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
+        working-directory: ./backend
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
+        working-directory: ./backend
         run: pnpm prisma generate
 
       - name: Run Unit Tests
+        working-directory: ./backend
         env:
           CI: true
         run: pnpm test

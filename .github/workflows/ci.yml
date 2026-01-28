@@ -50,11 +50,15 @@ jobs:
         version: 10
     
     - name: Install backend dependencies
-      working-directory: ./backend/og-backend
+      working-directory: ./backend
       run: pnpm install
     
+    - name: Generate Prisma Client
+      working-directory: ./backend
+      run: pnpm prisma generate
+    
     - name: Run backend tests
-      working-directory: ./backend/og-backend
+      working-directory: ./backend
       run: pnpm test
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
@@ -62,9 +66,9 @@ jobs:
         REDIS_PORT: 6379
     
     - name: Install frontend dependencies
-      working-directory: ./frontend/og-dashboard
+      working-directory: ./frontend
       run: npm ci
     
     - name: Build frontend
-      working-directory: ./frontend/og-dashboard
+      working-directory: ./frontend
       run: npm run build
