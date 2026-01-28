@@ -1,0 +1,76 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged to check staged files
+npx lint-staged
+
+# Enhanced secret scanning (check for common patterns)
+# Check for files that might contain secrets
+if git diff --cached --name-only | grep -qE '\.(env|key|pem|p12|pfx|p8|cer|crt|der|jks|keystore)$'; then
+  echo "⚠️  Warning: You are committing files that may contain secrets (.env, .key, .pem, etc.)"
+  echo "Please verify these files do not contain sensitive information."
+  echo "If you're sure these files are safe, you can bypass this check with --no-verify"
+  exit 1
+fi
+
+# Check for common hardcoded secrets patterns in staged changes
+# Exclude test files and known safe patterns
+STAGED_FILES=$(git diff --cached --name-only)
+
+# Skip secret checks for test files and documentation
+SKIP_FILES=$(echo "$STAGED_FILES" | grep -E '(test|spec|\.md$|\.txt$|example|mock|fixture)')
+
+if [ -n "$SKIP_FILES" ]; then
+  echo "ℹ️  Skipping secret scan for test/documentation files"
+fi
+
+# Check for hardcoded secrets (excluding test files)
+SECRET_PATTERNS='
+  (password|passwd|pwd)\s*[:=]\s*["'\'']?[a-zA-Z0-9+/=]{8,}
+  (secret|api[_-]?key|apikey)\s*[:=]\s*["'\'']?[a-zA-Z0-9+/=]{16,}
+  (token|access[_-]?token|refresh[_-]?token)\s*[:=]\s*["'\'']?[a-zA-Z0-9+/=]{16,}
+  (private[_-]?key|privatekey)\s*[:=]\s*["'\'']?[a-zA-Z0-9+/=\s]{32,}
+  (aws[_-]?access[_-]?key[_-]?id|aws[_-]?secret[_-]?access[_-]?key)\s*[:=]\s*["'\'']?[A-Z0-9]{20,}
+  (AKIA[0-9A-Z]{16})
+  (sk_live_[a-zA-Z0-9]{24,})
+  (xox[baprs]-[0-9a-zA-Z-]{10,})
+  (ghp_[a-zA-Z0-9]{36})
+  (gho_[a-zA-Z0-9]{36})
+  (ghu_[a-zA-Z0-9]{36})
+  (ghs_[a-zA-Z0-9]{36})
+  (ghr_[a-zA-Z0-9]{36})
+'
+
+for pattern in $SECRET_PATTERNS; do
+  # Check staged changes, excluding test files
+  if echo "$STAGED_FILES" | grep -vE '(test|spec|\.md$|\.txt$|example|mock|fixture)' | \
+     xargs git diff --cached | \
+     grep -qiE "$pattern" | \
+     grep -vE '(test|example|mock|fake|placeholder|dummy|sample)'; then
+    echo "❌ Error: Potential hardcoded secret detected in staged files!"
+    echo "Pattern matched: $pattern"
+    echo "Please remove hardcoded secrets and use environment variables or secrets management."
+    echo "If this is a false positive (e.g., test data), you can bypass with --no-verify"
+    exit 1
+  fi
+done
+
+# Check for private key file patterns
+if git diff --cached | grep -qiE 'BEGIN (RSA|DSA|EC|OPENSSH|PGP) PRIVATE KEY'; then
+  echo "❌ Error: Potential private key detected in staged files!"
+  echo "Please ensure private keys are not committed to the repository."
+  echo "If this is a false positive, you can bypass with --no-verify"
+  exit 1
+fi
+
+# Check for AWS credential patterns
+if git diff --cached | grep -qiE '(aws_access_key_id|aws_secret_access_key)\s*[:=]' | \
+   grep -vE '(test|example|mock|fake|placeholder)'; then
+  echo "❌ Error: Potential AWS credentials detected in staged files!"
+  echo "Please use environment variables or AWS IAM roles instead."
+  echo "If this is a false positive, you can bypass with --no-verify"
+  exit 1
+fi
+
+echo "✅ Secret scan passed"
+

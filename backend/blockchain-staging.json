@@ -1,0 +1,319 @@
+{
+  "compatibilities": [
+    "EC2",
+    "MANAGED_INSTANCES",
+    "FARGATE"
+  ],
+  "containerDefinitions": [
+    {
+      "cpu": 0,
+      "environment": [
+        {
+          "name": "KMS_SERVICE_PORT",
+          "value": "3001"
+        },
+        {
+          "name": "ENABLE_LEGACY_ENCRYPTION",
+          "value": "true"
+        },
+        {
+          "name": "RESEND_FROM_EMAIL",
+          "value": "Royalty Marketplace <noreply@email.Empressa.io>"
+        },
+        {
+          "name": "FULA_API_URL",
+          "value": "https://api.cloud.fx.land"
+        },
+        {
+          "name": "FULA_IPFS_URL",
+          "value": "https://ipfs.cloud.fx.land"
+        },
+        {
+          "name": "POSTGRES_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "KMS_KEY_POOL_SIZE",
+          "value": "10"
+        },
+        {
+          "name": "TEMP_STORAGE_PATH",
+          "value": "./temp-uploads"
+        },
+        {
+          "name": "KMS_ENCRYPTION_ALGORITHM",
+          "value": "AES_256_GCM"
+        },
+        {
+          "name": "USE_KMS_ENCRYPTION",
+          "value": "true"
+        },
+        {
+          "name": "IPFS_SERVICE_PORT",
+          "value": "3004"
+        },
+        {
+          "name": "PINATA_API_URL",
+          "value": "https://api.pinata.cloud"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "6379"
+        },
+        {
+          "name": "ROYALTY_MARKETPLACE_URL",
+          "value": "http://localhost:5173"
+        },
+        {
+          "name": "ADMIN_SERVICE_PORT",
+          "value": "4242"
+        },
+        {
+          "name": "BLOCKCHAIN_SERVICE_PORT",
+          "value": "3003"
+        },
+        {
+          "name": "CORE_API_PORT",
+          "value": "3000"
+        },
+        {
+          "name": "JWT_REFRESH_TOKEN_EXPIRATION",
+          "value": "7d"
+        },
+        {
+          "name": "NODE_ENV",
+          "value": "staging"
+        },
+        {
+          "name": "JWT_ACCESS_TOKEN_EXPIRATION",
+          "value": "12h"
+        },
+        {
+          "name": "MIGRATION_BATCH_SIZE",
+          "value": "100"
+        }
+      ],
+      "essential": true,
+      "image": "703761850003.dkr.ecr.us-east-1.amazonaws.com/Empressa-core-blockchain-stage:latest",
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/stage/Empressa-blockchain-stage",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "Empressa-blockchain-stage"
+        }
+      },
+      "mountPoints": [],
+      "name": "Empressa-blockchain-stage",
+      "portMappings": [
+        {
+          "containerPort": 3003,
+          "hostPort": 3003,
+          "protocol": "tcp"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "POSTGRES_HOST",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:POSTGRES_HOST::"
+        },
+        {
+          "name": "POSTGRES_DB",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:POSTGRES_DB::"
+        },
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:DATABASE_URL::"
+        },
+        {
+          "name": "POSTGRES_USER",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:POSTGRES_USER::"
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:POSTGRES_PASSWORD::"
+        },
+        {
+          "name": "REDIS_HOST",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:REDIS_HOST::"
+        },
+        {
+          "name": "RABBITMQ_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:RABBITMQ_URL::"
+        },
+        {
+          "name": "RABBITMQ_USER",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:RABBITMQ_USER::"
+        },
+        {
+          "name": "RABBITMQ_PASS",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:RABBITMQ_PASS::"
+        },
+        {
+          "name": "KMS_SERVICE_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:KMS_SERVICE_URL::"
+        },
+        {
+          "name": "BLOCKCHAIN_SERVICE_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:BLOCKCHAIN_SERVICE_URL::"
+        },
+        {
+          "name": "IPFS_SERVICE_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:IPFS_SERVICE_URL::"
+        },
+        {
+          "name": "LENS_MANAGER_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:LENS_MANAGER_URL::"
+        },
+        {
+          "name": "INDEXER_API_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:INDEXER_API_URL::"
+        },
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:JWT_SECRET::"
+        },
+        {
+          "name": "MASTER_KEK",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:MASTER_KEK::"
+        },
+        {
+          "name": "PLATFORM_VERIFIER_PRIVATE_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:PLATFORM_VERIFIER_PRIVATE_KEY::"
+        },
+        {
+          "name": "RPC_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:RPC_URL::"
+        },
+        {
+          "name": "ADMIN_WALLET_PRIVATE_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:ADMIN_WALLET_PRIVATE_KEY::"
+        },
+        {
+          "name": "FAUCET_WALLET_PRIVATE_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:FAUCET_WALLET_PRIVATE_KEY::"
+        },
+        {
+          "name": "FAUCET_NATIVE_AMOUNT",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:FAUCET_NATIVE_AMOUNT::"
+        },
+        {
+          "name": "FAUCET_USDC_AMOUNT",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:FAUCET_USDC_AMOUNT::"
+        },
+        {
+          "name": "FACTORY_CONTRACT_ADDRESS",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:FACTORY_CONTRACT_ADDRESS::"
+        },
+        {
+          "name": "USDC_CONTRACT_ADDRESS",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:USDC_CONTRACT_ADDRESS::"
+        },
+        {
+          "name": "WEB3AUTH_JWKS_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:WEB3AUTH_JWKS_URL::"
+        },
+        {
+          "name": "ADMIN_DASHBOARD_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:ADMIN_DASHBOARD_URL::"
+        },
+        {
+          "name": "WEB3AUTH_ISSUER",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:WEB3AUTH_ISSUER::"
+        },
+        {
+          "name": "WEB3AUTH_AUDIENCE",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:WEB3AUTH_AUDIENCE::"
+        },
+        {
+          "name": "RESEND_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:RESEND_API_KEY::"
+        },
+        {
+          "name": "PINATA_JWT",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:PINATA_JWT::"
+        },
+        {
+          "name": "FULA_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:FULA_API_KEY::"
+        },
+        {
+          "name": "PLATFORM_VERIFIER_ADDRESS",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:PLATFORM_VERIFIER_ADDRESS::"
+        },
+        {
+          "name": "FACTORY_PROXY_CONTRACT_ADDRESS",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:FACTORY_PROXY_CONTRACT_ADDRESS::"
+        },
+        {
+          "name": "ASSET_REGISTRY_CONTRACT_ADDRESS",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:ASSET_REGISTRY_CONTRACT_ADDRESS::"
+        },
+        {
+          "name": "AWS_REGION",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:AWS_REGION::"
+        },
+        {
+          "name": "AWS_ACCESS_KEY_ID",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:AWS_ACCESS_KEY_ID::"
+        },
+        {
+          "name": "AWS_SECRET_ACCESS_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:AWS_SECRET_ACCESS_KEY::"
+        },
+        {
+          "name": "KMS_KEY_ALIAS_PREFIX",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:703761850003:secret:Empressa-core-backend-stage-tfYYHp:KMS_KEY_ALIAS_PREFIX::"
+        }
+      ],
+      "systemControls": [],
+      "volumesFrom": []
+    }
+  ],
+  "cpu": "512",
+  "executionRoleArn": "arn:aws:iam::703761850003:role/stage-Empressa-blockchain-stage-exec",
+  "family": "Empressa-blockchain-stage-task",
+  "memory": "1024",
+  "networkMode": "awsvpc",
+  "placementConstraints": [],
+  "registeredAt": "2025-11-04T03:04:04.022Z",
+  "registeredBy": "arn:aws:iam::703761850003:user/devopsuser",
+  "requiresAttributes": [
+    {
+      "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+    },
+    {
+      "name": "ecs.capability.execution-role-awslogs"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.ecr-auth"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+    },
+    {
+      "name": "ecs.capability.secrets.asm.environment-variables"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.task-iam-role"
+    },
+    {
+      "name": "ecs.capability.execution-role-ecr-pull"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+    },
+    {
+      "name": "ecs.capability.task-eni"
+    }
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "revision": 1,
+  "status": "ACTIVE",
+  "taskDefinitionArn": "arn:aws:ecs:us-east-1:703761850003:task-definition/Empressa-blockchain-stage-task:1",
+  "taskRoleArn": "arn:aws:iam::703761850003:role/stage-Empressa-blockchain-stage-task",
+  "volumes": [],
+  "tags": []
+}

@@ -1,0 +1,79 @@
+name: Deploy Staging to AWS ECS
+
+on:
+  push:
+    branches:
+      - staging
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+  IMAGE_TAG: latest
+  AWS_SUBNETS: ${{ vars.AWS_SUBNETS }}
+  AWS_SECURITY_GRP: ${{ vars.AWS_SECURITY_GRP }}
+
+jobs:
+  test:
+    uses: ./.github/workflows/unit-tests.yaml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    # Build and push each service image independently
+    strategy:
+      matrix:
+        service:
+          - { name: hauska-ipfs-stage-svc, app: ipfs-service, repo: hauska-core-ipfs-stage, type: service }
+          - { name: hauska-blockchain-stage-svc, app: blockchain-service, repo: hauska-core-blockchain-stage, type: service }
+          - { name: hauska-kms-stage-svc, app: kms-service, repo: hauska-core-kms-stage, type: service }
+          - { name: hauska-admin-stage-svc, app: admin-service, repo: hauska-core-admin-stage, type: service }
+          - { name: hauska-api-stage-svc, app: core-api, repo: hauska-core-api-stage, type: service }
+          - { name: hauska-core-migrations-stage-task, app: core-api, repo: hauska-core-migrations-stage, type: task, task_def: hauska-core-migrations-stage-task }
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        run: |
+          docker build \
+            --build-arg APP_NAME=${{ matrix.service.app }} \
+            --target production \
+            -t ${{ matrix.service.repo }}:${{ env.IMAGE_TAG }} .
+
+          docker tag \
+            ${{ matrix.service.repo }}:${{ env.IMAGE_TAG }} \
+            ${{ steps.login-ecr.outputs.registry }}/${{ matrix.service.repo }}:${{ env.IMAGE_TAG }}
+
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ matrix.service.repo }}:${{ env.IMAGE_TAG }}
+
+      - name: Force new ECS deployment
+        if: matrix.service.type == 'service'
+        run: |
+          aws ecs update-service \
+            --cluster "$ECS_CLUSTER" \
+            --service "${{ matrix.service.name }}" \
+            --force-new-deployment \
+            --region "$AWS_REGION"
+
+      - name: Run Core Migrations ECS Task
+        if: matrix.service.type == 'task'
+        run: |
+          aws ecs run-task \
+            --cluster "$ECS_CLUSTER" \
+            --task-definition "${{ matrix.service.task_def }}" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=${{ env.AWS_SUBNETS }},securityGroups=${{ env.AWS_SECURITY_GRP }},assignPublicIp=DISABLED}" \
+            --region "$AWS_REGION"

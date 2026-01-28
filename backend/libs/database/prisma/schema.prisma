@@ -1,0 +1,1203 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgcrypto]
+}
+
+enum OrganizationRole {
+  Principal
+  Manager
+  AssetManager
+  Compliance
+}
+
+enum ChainEventType {
+  CREATE_ORG_CONTRACT
+  DEPOSIT_FUNDS
+  WITHDRAW_FUNDS
+  CREATE_ASSET
+  TRANSFER_ASSET
+  VERIFY_ASSET
+  LICENSE_ASSET
+  GRANT_CREATOR_ROLE
+  REVOKE_CREATOR_ROLE
+  FUND_USER_WALLET
+  WITHDRAW_ORG_EARNINGS
+}
+
+enum BlockchainJobStatus {
+  QUEQUED
+  SUBMITTED
+  SUCCESS
+  ERROR
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+enum OrganizationStatus {
+  UNCLAIMED
+  ACTIVE
+}
+
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String   @unique
+  firstName    String?  @map("first_name")
+  lastName     String?  @map("last_name")
+  profileImage String?  @map("profile_image")
+  isActive     Boolean  @default(false) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Persona identity verification fields
+  personaVerified  Boolean @default(false) @map("persona_verified")
+  kycStatus        String? @map("kyc_status") // 'pending' | 'verified' | 'failed'
+  personaSessionId String? @map("persona_session_id")
+
+  authentications        UserAuthentication[]
+  sessions               SessionRefreshToken[]
+  wallet                 Wallet?
+  p2pIdentity            P2PIdentity?
+  createdOrganizations   Organization[]
+  memberships            OrganizationMember[]
+  organizationRequests   OrganizationCreationRequest[]
+  buyerOffers            Offer[]                       @relation("BuyerOffers")
+  sellerOffers           Offer[]                       @relation("SellerOffers")
+  buyerTransactions      Transaction[]                 @relation("BuyerTransactions")
+  sellerTransactions     Transaction[]                 @relation("SellerTransactions")
+  notifications          Notification[]
+  divisionOrderOwners    DivisionOrderOwner[]          @relation("DivisionOrderOwners")
+  approvedDivisionOrders DivisionOrder[]               @relation("ApprovedDivisionOrders")
+  dataRooms              DataRoom[]                    @relation("DataRooms")
+
+  @@map("users")
+}
+
+model UserAuthentication {
+  provider       String
+  providerUserId String   @map("provider_user_id")
+  userId         String   @map("user_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerUserId])
+  @@map("user_authentications")
+}
+
+model SessionRefreshToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  isRevoked Boolean  @default(false) @map("is_revoked")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session_refresh_tokens")
+}
+
+model Organization {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  siteAddress     String?   @unique @map("site_address")
+  contractAddress String?   @unique @map("contract_address")
+  name            String
+  principalUserId String?   @map("principal_user_id") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+
+  status OrganizationStatus @default(ACTIVE)
+
+  logoImage       String? @map("logo_image")
+  blurb           String? @db.Text
+  isConfigured    Boolean @default(false) @map("is_configured")
+  country         String?
+  legalEntityType String? @map("legal_entity_type")
+  primaryIndustry String? @map("primary_industry")
+
+  principalUser  User?                @relation(fields: [principalUserId], references: [id], onDelete: SetNull)
+  members        OrganizationMember[]
+  divisionOrders DivisionOrder[]
+
+  following OrganizationFollow[] @relation("Following")
+  followers OrganizationFollow[] @relation("Followers")
+
+  links       OrganizationLink[]
+  invitations OrganizationInvitation[]
+
+  // Lease relationships
+  lessorLeases Lease[] @relation("LessorLeases")
+  lesseeLeases Lease[] @relation("LesseeLeases")
+
+  // JIB relationships
+  operatorJibDecks       JibDeck[]    @relation("OperatorJibDecks")
+  operatorAfes           Afe[]        @relation("OperatorAfes")
+  nonOperatorJibInvoices JibInvoice[] @relation("NonOperatorJibInvoices")
+
+  // Contract Area relationships
+  contractAreaParticipants ContractAreaParticipant[] @relation("ContractAreaParticipants")
+
+  // JOA relationships
+  operatorJoas Joa[] @relation("OperatorJoas")
+
+  // Data Room relationships
+  dataRooms DataRoom[] @relation("DataRooms")
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  organizationId String           @map("organization_id") @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  role           OrganizationRole @default(AssetManager)
+  isActiveMember Boolean          @default(true) @map("is_active_member")
+  joinedAt       DateTime         @default(now()) @map("joined_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, userId])
+  @@map("organization_members")
+}
+
+model OrganizationCreationRequest {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  requestedName String        @map("requested_name")
+  status        RequestStatus @default(PENDING)
+  adminNotes    String?       @map("admin_notes")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  reviewedAt    DateTime?     @map("reviewed_at")
+
+  country         String
+  legalEntityType String @map("legal_entity_type")
+  primaryIndustry String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("organization_creation_requests")
+}
+
+model OrganizationInvitation {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  email          String
+  role           OrganizationRole
+  token          String           @unique
+  status         InvitationStatus @default(PENDING)
+  expiresAt      DateTime         @map("expires_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@map("organization_invitations")
+}
+
+model OrganizationLink {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  type           String // e.g., 'Website', 'LinkedIn', 'Twitter'
+  url            String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_links")
+}
+
+// --- Wallet Service Model ---
+
+model Wallet {
+  userId              String   @id @map("user_id") @db.Uuid
+  walletAddress       String   @unique @map("wallet_address")
+  compressedPublicKey String   @unique @map("compressed_public_key")
+  encryptedSeed       String   @map("encrypted_seed")
+  encryptedDek        String   @map("encrypted_dek")
+  kmsKeyId            String?  @map("kms_key_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
+}
+
+model BlockchainJob {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  idempotencyKey String?             @unique @map("idempotency_key")
+  eventType      ChainEventType      @map("event_type")
+  status         BlockchainJobStatus @default(QUEQUED)
+  payloadJson    Json                @map("payload_json")
+  errorMessage   String?             @map("error_message")
+  retryCount     Int                 @default(0) @map("retry_count")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  finalizedAt    DateTime?           @map("finalized_at")
+
+  @@index([eventType])
+  @@index([status])
+  @@map("blockchain_jobs")
+}
+
+model P2PIdentity {
+  userId              String   @id @map("user_id") @db.Uuid
+  publicKey           String   @unique @map("public_key")
+  peerId              String   @unique @map("peer_id")
+  encryptedPrivateKey String   @map("encrypted_private_key")
+  encryptedDek        String   @map("encrypted_dek")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("p2p_identities")
+}
+
+model OrganizationFollow {
+  followerOrgId  String   @map("follower_org_id") @db.Uuid
+  followingOrgId String   @map("following_org_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  follower  Organization @relation("Following", fields: [followerOrgId], references: [id], onDelete: Cascade)
+  following Organization @relation("Followers", fields: [followingOrgId], references: [id], onDelete: Cascade)
+
+  @@id([followerOrgId, followingOrgId])
+  @@map("organization_follows")
+}
+
+model AdminUser {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  firstName    String?   @map("first_name")
+  lastName     String?   @map("last_name")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  lastLoginAt  DateTime? @map("last_login_at")
+
+  @@map("admin_users")
+}
+
+model JtiBlocklist {
+  jti       String   @id
+  exp       DateTime
+  createdAt DateTime @default(now())
+
+  @@index([exp])
+  @@map("jti_blocklist")
+}
+
+model IdempotencyKey {
+  idempotencyKey String   @id @map("idempotency_key")
+  userId         String?  @map("user_id") @db.Uuid
+  method         String // HTTP method (GET, POST, PUT, PATCH, DELETE)
+  path           String // Endpoint path
+  requestHash    String?  @map("request_hash") // Hash of request body for validation
+  responseStatus Int      @map("response_status")
+  responseBody   Json?    @map("response_body") // Cached response
+  expiresAt      DateTime @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
+enum OfferStatus {
+  PENDING
+  UNDER_REVIEW
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+  EXPIRED
+  COUNTERED
+}
+
+enum OfferType {
+  CASH
+  TERMS
+  CASH_ORRI
+  ASSET_EXCHANGE
+  FARM_OUT
+}
+
+model Offer {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assetId       String      @map("asset_id") // Reference to release/asset (P2P release ID)
+  buyerId       String      @map("buyer_id") @db.Uuid
+  sellerId      String      @map("seller_id") @db.Uuid
+  amount        Decimal     @db.Decimal(18, 2)
+  earnestMoney  Decimal?    @map("earnest_money") @db.Decimal(18, 2)
+  ddPeriod      Int?        @map("dd_period") // Due diligence period in days
+  closingDate   DateTime?   @map("closing_date")
+  status        OfferStatus @default(PENDING)
+  offerType     OfferType   @map("offer_type")
+  contingencies Json? // Array of contingency objects
+  terms         Json? // Additional terms
+  notes         String?     @db.Text
+  parentOfferId String?     @map("parent_offer_id") @db.Uuid // For counter-offers
+  expiresAt     DateTime?   @map("expires_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  buyer         User           @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller        User           @relation("SellerOffers", fields: [sellerId], references: [id], onDelete: Cascade)
+  parentOffer   Offer?         @relation("CounterOffers", fields: [parentOfferId], references: [id], onDelete: SetNull)
+  counterOffers Offer[]        @relation("CounterOffers")
+  transaction   Transaction?
+  notifications Notification[]
+
+  @@index([assetId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([parentOfferId])
+  @@index([createdAt])
+  @@map("offers")
+}
+
+enum TransactionStatus {
+  PENDING
+  EARNEST_DEPOSITED
+  DUE_DILIGENCE
+  FUNDING
+  CLOSED
+  CANCELLED
+  FAILED
+}
+
+model Transaction {
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  offerId            String            @unique @map("offer_id") @db.Uuid
+  assetId            String            @map("asset_id") // Reference to release/asset
+  buyerId            String            @map("buyer_id") @db.Uuid
+  sellerId           String            @map("seller_id") @db.Uuid
+  purchasePrice      Decimal           @map("purchase_price") @db.Decimal(18, 2)
+  earnestAmount      Decimal?          @map("earnest_amount") @db.Decimal(18, 2)
+  earnestDepositedAt DateTime?         @map("earnest_deposited_at")
+  ddPeriod           Int?              @map("dd_period") // Due diligence period in days
+  ddCompletedAt      DateTime?         @map("dd_completed_at")
+  closingDate        DateTime?         @map("closing_date")
+  status             TransactionStatus @default(PENDING)
+
+  // Settlement fields
+  platformFee   Decimal? @map("platform_fee") @db.Decimal(18, 2)
+  integratorFee Decimal? @map("integrator_fee") @db.Decimal(18, 2)
+  creatorAmount Decimal? @map("creator_amount") @db.Decimal(18, 2)
+  prorations    Json? // Prorations (taxes, royalties, etc.)
+  adjustments   Json? // Additional adjustments
+  netProceeds   Decimal? @map("net_proceeds") @db.Decimal(18, 2)
+
+  // Fee application fields
+  feeApplicationMode String?  @map("fee_application_mode") // 'BUY_SIDE_ONLY', 'SELL_SIDE_ONLY', 'SPLIT'
+  buySidePercentage  Decimal? @map("buy_side_percentage") @db.Decimal(7, 2) // For split mode (basis points, 0-10000)
+
+  // Transaction metadata
+  contingencies       Json? // Contingencies from offer
+  terms               Json? // Terms from offer
+  notes               String? @db.Text
+  settlementStatement Json?   @map("settlement_statement") // Generated settlement statement
+
+  // Blockchain integration
+  onChainTxHash String? @map("on_chain_tx_hash")
+  escrowAddress String? @map("escrow_address")
+
+  // E-Notary/E-Recording integration (Simplify)
+  simplifyNotarySessionId String? @map("simplify_notary_session_id")
+  recordingStatus         String? @map("recording_status") // e.g., 'pending', 'submitted', 'recorded', 'failed'
+  recordingFileNumber     String? @map("recording_file_number")
+  recordingBookPage       String? @map("recording_book_page")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  closedAt  DateTime? @map("closed_at")
+
+  offer                  Offer                   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  buyer                  User                    @relation("BuyerTransactions", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller                 User                    @relation("SellerTransactions", fields: [sellerId], references: [id], onDelete: Cascade)
+  notifications          Notification[]
+  divisionOrderTransfers DivisionOrderTransfer[]
+
+  @@index([assetId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+enum NotificationType {
+  OFFER_CREATED
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+  OFFER_COUNTERED
+  OFFER_WITHDRAWN
+  OFFER_EXPIRED
+  TRANSACTION_CREATED
+  TRANSACTION_EARNEST_DEPOSITED
+  TRANSACTION_DUE_DILIGENCE_COMPLETE
+  TRANSACTION_FUNDED
+  TRANSACTION_CLOSED
+  TRANSACTION_CANCELLED
+  SETTLEMENT_STATEMENT_READY
+}
+
+enum NotificationChannel {
+  EMAIL
+  IN_APP
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  DELIVERED
+  READ
+}
+
+model Notification {
+  id       String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId   String              @map("user_id") @db.Uuid
+  type     NotificationType
+  channel  NotificationChannel @default(EMAIL)
+  status   NotificationStatus  @default(PENDING)
+  subject  String?             @db.Text
+  message  String?             @db.Text
+  metadata Json? // Additional data (transactionId, offerId, etc.)
+
+  // Related entities
+  transactionId String? @map("transaction_id") @db.Uuid
+  offerId       String? @map("offer_id") @db.Uuid
+
+  // Delivery tracking
+  sentAt       DateTime? @map("sent_at")
+  deliveredAt  DateTime? @map("delivered_at")
+  readAt       DateTime? @map("read_at")
+  errorMessage String?   @map("error_message") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  offer       Offer?       @relation(fields: [offerId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([transactionId])
+  @@index([offerId])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// --- Division Order Models ---
+
+enum DivisionOrderStatus {
+  PENDING
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ACTIVE
+}
+
+enum OwnerType {
+  MINERAL
+  WORKING_INTEREST
+  OVERRIDE
+}
+
+enum TransferType {
+  SALE
+  INHERITANCE
+  GIFT
+  OTHER
+}
+
+enum TransferStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+  ACTIVE
+}
+
+enum RevenueType {
+  OIL
+  GAS
+  NGL
+}
+
+// --- Lease Management Enums ---
+
+enum LeaseStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+  RENEWED
+  DISPUTED
+}
+
+enum AmendmentType {
+  EXTENSION
+  ROYALTY_CHANGE
+  TERM_CHANGE
+  OTHER
+}
+
+// --- JIB (Joint Interest Billing) Enums ---
+
+enum JibDeckStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  ACTIVE
+  CLOSED
+}
+
+enum AfeStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+  ACTIVE
+  COMPLETED
+}
+
+enum CostCategory {
+  DRILLING
+  COMPLETION
+  OPERATIONS
+  LEASE_OPERATIONS
+  GATHERING
+  PROCESSING
+  TRANSPORTATION
+  OTHER
+}
+
+enum InvoiceStatus {
+  PENDING
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// --- AMI & Contract Area Enums ---
+
+enum CurativeStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  NOT_REQUIRED
+}
+
+enum AbstractStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  SUPERSEDED
+}
+
+model DivisionOrder {
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  wellId               String              @map("well_id") // Asset/Well identifier
+  wellName             String?             @map("well_name")
+  operatorOrgId        String              @map("operator_org_id") @db.Uuid
+  status               DivisionOrderStatus @default(PENDING)
+  productionStartDate  DateTime?           @map("production_start_date")
+  totalDecimalInterest Decimal             @map("total_decimal_interest") @db.Decimal(10, 8) // Should be 100.00000000
+  notes                String?             @db.Text
+  rejectedReason       String?             @map("rejected_reason") @db.Text
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @updatedAt @map("updated_at")
+  approvedAt           DateTime?           @map("approved_at")
+  approvedBy           String?             @map("approved_by") @db.Uuid // User ID of analyst
+
+  operatorOrg    Organization                 @relation(fields: [operatorOrgId], references: [id], onDelete: Cascade)
+  approvedByUser User?                        @relation("ApprovedDivisionOrders", fields: [approvedBy], references: [id], onDelete: SetNull)
+  owners         DivisionOrderOwner[]
+  revenueStreams DivisionOrderRevenueStream[]
+  transfers      DivisionOrderTransfer[]
+
+  @@index([wellId])
+  @@index([operatorOrgId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("division_orders")
+}
+
+model DivisionOrderOwner {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  divisionOrderId String    @map("division_order_id") @db.Uuid
+  ownerType       OwnerType @map("owner_type")
+  userId          String?   @map("user_id") @db.Uuid // Platform user (if applicable)
+  externalName    String?   @map("external_name")
+  externalEmail   String?   @map("external_email")
+  externalAddress String?   @map("external_address") @db.Text
+  decimalInterest Decimal   @map("decimal_interest") @db.Decimal(10, 8) // 8 decimal precision
+  nri             Decimal?  @map("nri") @db.Decimal(10, 8) // Net Revenue Interest
+  wi              Decimal?  @map("wi") @db.Decimal(10, 8) // Working Interest
+
+  paymentAddress String? @map("payment_address") // Wallet or bank account
+  paymentMethod  String? @map("payment_method") // "WALLET", "BANK", "CHECK"
+  contactInfo    Json?   @map("contact_info") // Additional contact details
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  divisionOrder DivisionOrder          @relation(fields: [divisionOrderId], references: [id], onDelete: Cascade)
+  user          User?                  @relation("DivisionOrderOwners", fields: [userId], references: [id], onDelete: SetNull)
+  payments      DivisionOrderPayment[]
+
+  @@index([divisionOrderId])
+  @@index([userId])
+  @@index([isActive])
+  @@map("division_order_owners")
+}
+
+model DivisionOrderTransfer {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  divisionOrderId String       @map("division_order_id") @db.Uuid
+  fromOwnerId     String       @map("from_owner_id") @db.Uuid
+  toOwnerId       String?      @map("to_owner_id") @db.Uuid // Null for transfers to new owners
+  toExternalName  String?      @map("to_external_name") // For external owners
+  interestAmount  Decimal      @map("interest_amount") @db.Decimal(10, 8)
+  transferType    TransferType @map("transfer_type")
+  transactionId   String?      @map("transaction_id") @db.Uuid // Link to marketplace transaction
+  assignmentDocId String?      @map("assignment_doc_id") // Link to Title Manager document
+
+  status               TransferStatus @default(PENDING)
+  submittedAt          DateTime?      @map("submitted_at")
+  approvedAt           DateTime?      @map("approved_at")
+  courthouseFiledAt    DateTime?      @map("courthouse_filed_at")
+  courthouseFileNumber String?        @map("courthouse_file_number")
+  notes                String?        @db.Text
+  rejectedReason       String?        @map("rejected_reason") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  divisionOrder DivisionOrder @relation(fields: [divisionOrderId], references: [id], onDelete: Cascade)
+  transaction   Transaction?  @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  @@index([divisionOrderId])
+  @@index([transactionId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("division_order_transfers")
+}
+
+model DivisionOrderRevenueStream {
+  id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  divisionOrderId    String      @map("division_order_id") @db.Uuid
+  revenueType        RevenueType @map("revenue_type")
+  monthlyRevenue     Decimal     @map("monthly_revenue") @db.Decimal(15, 2)
+  distributionDate   DateTime    @map("distribution_date")
+  totalDistributed   Decimal     @map("total_distributed") @db.Decimal(15, 2)
+  distributionMethod String?     @map("distribution_method") // "SMART_CONTRACT", "TRADITIONAL"
+  onChainTxHash      String?     @map("on_chain_tx_hash")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  divisionOrder DivisionOrder          @relation(fields: [divisionOrderId], references: [id], onDelete: Cascade)
+  payments      DivisionOrderPayment[]
+
+  @@index([divisionOrderId])
+  @@index([distributionDate])
+  @@map("division_order_revenue_streams")
+}
+
+model DivisionOrderPayment {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  revenueStreamId  String    @map("revenue_stream_id") @db.Uuid
+  ownerId          String    @map("owner_id") @db.Uuid
+  paymentAmount    Decimal   @map("payment_amount") @db.Decimal(15, 2)
+  decimalInterest  Decimal   @map("decimal_interest") @db.Decimal(10, 8)
+  paymentStatus    String    @map("payment_status") // "PENDING", "DISTRIBUTED", "SUSPENSE"
+  paymentMethod    String?   @map("payment_method")
+  paymentReference String?   @map("payment_reference")
+  distributedAt    DateTime? @map("distributed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  revenueStream DivisionOrderRevenueStream @relation(fields: [revenueStreamId], references: [id], onDelete: Cascade)
+  owner         DivisionOrderOwner         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([revenueStreamId])
+  @@index([ownerId])
+  @@index([paymentStatus])
+  @@map("division_order_payments")
+}
+
+// --- Lease Management Models ---
+
+model Lease {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assetId     String? @map("asset_id") // Link to existing asset (optional - may not have asset yet)
+  lessorOrgId String  @map("lessor_org_id") @db.Uuid
+  lesseeOrgId String  @map("lessee_org_id") @db.Uuid
+  tractId     String? @map("tract_id") // Future: link to tracts table
+
+  // Lease terms
+  leaseDate          DateTime  @map("lease_date")
+  primaryTermMonths  Int?      @map("primary_term_months")
+  primaryTermExpires DateTime? @map("primary_term_expires")
+  royaltyRate        Decimal?  @map("royalty_rate") @db.Decimal(5, 4) // e.g., 0.25 = 25%
+  bonusAmount        Decimal?  @map("bonus_amount") @db.Decimal(18, 2)
+  bonusPaidDate      DateTime? @map("bonus_paid_date")
+  delayRentalAmount  Decimal?  @map("delay_rental_amount") @db.Decimal(18, 2)
+  delayRentalDueDate DateTime? @map("delay_rental_due_date")
+  delayRentalPaid    Boolean   @default(false) @map("delay_rental_paid")
+
+  // Provisions
+  pughClause                   Boolean @default(false) @map("pugh_clause")
+  depthSeverance               Boolean @default(false) @map("depth_severance")
+  continuousOperationsRequired Boolean @default(false) @map("continuous_operations_required")
+  shutInRoyaltyProvision       Boolean @default(false) @map("shut_in_royalty_provision")
+  surfaceUseAgreement          Boolean @default(false) @map("surface_use_agreement")
+
+  // Status
+  leaseStatus         LeaseStatus @default(ACTIVE) @map("lease_status")
+  heldByProduction    Boolean     @default(false) @map("held_by_production")
+  hbpWellId           String?     @map("hbp_well_id") // Future: link to wells table
+  productionStartDate DateTime?   @map("production_start_date")
+
+  // Renewal
+  renewalDate       DateTime? @map("renewal_date")
+  renewalTermMonths Int?      @map("renewal_term_months")
+  autoRenew         Boolean   @default(false) @map("auto_renew")
+
+  // Documents
+  leaseDocumentId String? @map("lease_document_id") // Link to document storage
+  recordingInfo   Json?   @map("recording_info") // County, book, page, etc.
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  lessorOrg     Organization      @relation("LessorLeases", fields: [lessorOrgId], references: [id], onDelete: Cascade)
+  lesseeOrg     Organization      @relation("LesseeLeases", fields: [lesseeOrgId], references: [id], onDelete: Cascade)
+  assignments   LeaseAssignment[]
+  amendments    LeaseAmendment[]
+  titleOpinions TitleOpinion[]    @relation("TitleOpinions")
+
+  @@index([assetId])
+  @@index([lessorOrgId])
+  @@index([lesseeOrgId])
+  @@index([leaseStatus])
+  @@index([primaryTermExpires])
+  @@index([heldByProduction])
+  @@index([createdAt])
+  @@map("leases")
+}
+
+model LeaseAssignment {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  leaseId          String   @map("lease_id") @db.Uuid
+  fromLesseeOrgId  String   @map("from_lessee_org_id") @db.Uuid
+  toLesseeOrgId    String   @map("to_lessee_org_id") @db.Uuid
+  assignmentDate   DateTime @map("assignment_date")
+  retainedInterest Decimal? @map("retained_interest") @db.Decimal(5, 4) // e.g., 0.05 = 5% ORRI
+  documentId       String?  @map("document_id") // Link to assignment document
+  recordingInfo    Json?    @map("recording_info") // County, book, page, etc.
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lease Lease @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+
+  @@index([leaseId])
+  @@index([fromLesseeOrgId])
+  @@index([toLesseeOrgId])
+  @@index([assignmentDate])
+  @@map("lease_assignments")
+}
+
+model LeaseAmendment {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  leaseId       String        @map("lease_id") @db.Uuid
+  amendmentDate DateTime      @map("amendment_date")
+  amendmentType AmendmentType @map("amendment_type")
+  description   String?       @db.Text
+  documentId    String?       @map("document_id") // Link to amendment document
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lease Lease @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+
+  @@index([leaseId])
+  @@index([amendmentDate])
+  @@map("lease_amendments")
+}
+
+// --- JIB (Joint Interest Billing) Models ---
+
+model JibDeck {
+  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  wellId             String        @map("well_id") // Well/Unit identifier
+  wellName           String?       @map("well_name")
+  operatorOrgId      String        @map("operator_org_id") @db.Uuid
+  billingPeriodStart DateTime      @map("billing_period_start")
+  billingPeriodEnd   DateTime      @map("billing_period_end")
+  status             JibDeckStatus @default(DRAFT)
+  totalCost          Decimal       @default(0) @map("total_cost") @db.Decimal(18, 2)
+  notes              String?       @db.Text
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  approvedAt DateTime? @map("approved_at")
+
+  operatorOrg Organization @relation("OperatorJibDecks", fields: [operatorOrgId], references: [id], onDelete: Cascade)
+  costs       JibCost[]
+  invoices    JibInvoice[]
+
+  @@index([wellId])
+  @@index([operatorOrgId])
+  @@index([status])
+  @@index([billingPeriodStart])
+  @@index([billingPeriodEnd])
+  @@map("jib_decks")
+}
+
+model JibCost {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jibDeckId     String       @map("jib_deck_id") @db.Uuid
+  afeId         String?      @map("afe_id") @db.Uuid // Link to AFE if applicable
+  costCategory  CostCategory @map("cost_category")
+  description   String?      @db.Text
+  costAmount    Decimal      @map("cost_amount") @db.Decimal(18, 2)
+  invoiceNumber String?      @map("invoice_number")
+  vendorName    String?      @map("vendor_name")
+  approved      Boolean      @default(false)
+  approvedBy    String?      @map("approved_by") @db.Uuid // User ID
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  jibDeck JibDeck @relation(fields: [jibDeckId], references: [id], onDelete: Cascade)
+  afe     Afe?    @relation(fields: [afeId], references: [id], onDelete: SetNull)
+
+  @@index([jibDeckId])
+  @@index([afeId])
+  @@index([costCategory])
+  @@map("jib_costs")
+}
+
+model Afe {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  wellId                 String    @map("well_id") // Well/Unit identifier
+  wellName               String?   @map("well_name")
+  operatorOrgId          String    @map("operator_org_id") @db.Uuid
+  afeNumber              String?   @unique @map("afe_number")
+  description            String?   @db.Text
+  estimatedCost          Decimal   @map("estimated_cost") @db.Decimal(18, 2)
+  approvedCost           Decimal?  @map("approved_cost") @db.Decimal(18, 2)
+  status                 AfeStatus @default(PENDING)
+  submittedAt            DateTime? @map("submitted_at")
+  approvedAt             DateTime? @map("approved_at")
+  approvedBy             String?   @map("approved_by") @db.Uuid // User ID
+  participationDecisions Json?     @map("participation_decisions") // Working interest owner decisions
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  operatorOrg Organization @relation("OperatorAfes", fields: [operatorOrgId], references: [id], onDelete: Cascade)
+  costs       JibCost[]
+
+  @@index([wellId])
+  @@index([operatorOrgId])
+  @@index([status])
+  @@index([afeNumber])
+  @@map("afes")
+}
+
+model JibInvoice {
+  id                     String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jibDeckId              String        @map("jib_deck_id") @db.Uuid
+  nonOperatorOrgId       String        @map("non_operator_org_id") @db.Uuid
+  workingInterestPercent Decimal       @map("working_interest_percent") @db.Decimal(5, 4) // e.g., 0.25 = 25%
+  invoiceAmount          Decimal       @map("invoice_amount") @db.Decimal(18, 2)
+  invoiceNumber          String?       @unique @map("invoice_number")
+  status                 InvoiceStatus @default(PENDING)
+  dueDate                DateTime?     @map("due_date")
+  paidAmount             Decimal       @default(0) @map("paid_amount") @db.Decimal(18, 2)
+  paidDate               DateTime?     @map("paid_date")
+  paymentMethod          String?       @map("payment_method")
+  paymentReference       String?       @map("payment_reference")
+  notes                  String?       @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  jibDeck        JibDeck      @relation(fields: [jibDeckId], references: [id], onDelete: Cascade)
+  nonOperatorOrg Organization @relation("NonOperatorJibInvoices", fields: [nonOperatorOrgId], references: [id], onDelete: Cascade)
+
+  @@index([jibDeckId])
+  @@index([nonOperatorOrgId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("jib_invoices")
+}
+
+// --- AMI & Contract Area Models ---
+
+model ContractArea {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  description     String?   @db.Text
+  boundaryGeoJson Json?     @map("boundary_geo_json") // GeoJSON polygon for boundary
+  effectiveDate   DateTime  @map("effective_date")
+  expirationDate  DateTime? @map("expiration_date")
+  notes           String?   @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  participants ContractAreaParticipant[]
+  amis         Ami[]
+
+  @@index([effectiveDate])
+  @@index([expirationDate])
+  @@map("contract_areas")
+}
+
+model ContractAreaParticipant {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contractAreaId       String    @map("contract_area_id") @db.Uuid
+  organizationId       String    @map("organization_id") @db.Uuid
+  participationPercent Decimal?  @map("participation_percent") @db.Decimal(5, 4)
+  effectiveDate        DateTime  @map("effective_date")
+  expirationDate       DateTime? @map("expiration_date")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  contractArea ContractArea @relation(fields: [contractAreaId], references: [id], onDelete: Cascade)
+  organization Organization @relation("ContractAreaParticipants", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([contractAreaId])
+  @@index([organizationId])
+  @@map("contract_area_participants")
+}
+
+model Ami {
+  id                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contractAreaId           String    @map("contract_area_id") @db.Uuid
+  name                     String
+  description              String?   @db.Text
+  effectiveDate            DateTime  @map("effective_date")
+  expirationDate           DateTime? @map("expiration_date")
+  notificationRequirements Json?     @map("notification_requirements") // Terms for notification on new opportunities
+  participationObligations Json?     @map("participation_obligations") // Obligations for participants
+  notes                    String?   @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  contractArea ContractArea @relation(fields: [contractAreaId], references: [id], onDelete: Cascade)
+
+  @@index([contractAreaId])
+  @@index([effectiveDate])
+  @@index([expirationDate])
+  @@map("amis")
+}
+
+model Joa {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  wellId        String   @map("well_id") // Well/Unit identifier
+  wellName      String?  @map("well_name")
+  operatorOrgId String   @map("operator_org_id") @db.Uuid
+  joaDate       DateTime @map("joa_date")
+  effectiveDate DateTime @map("effective_date")
+  description   String?  @db.Text
+  joaTerms      Json?    @map("joa_terms") // Store JOA terms and provisions
+  documentId    String?  @map("document_id") // Link to JOA document
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  operatorOrg Organization @relation("OperatorJoas", fields: [operatorOrgId], references: [id], onDelete: Cascade)
+
+  @@index([wellId])
+  @@index([operatorOrgId])
+  @@index([effectiveDate])
+  @@map("joas")
+}
+
+// --- Title Curative Models ---
+
+model TitleOpinion {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tractId              String?  @map("tract_id") // Future: link to tracts table
+  leaseId              String?  @map("lease_id") @db.Uuid
+  attorneyName         String?  @map("attorney_name")
+  opinionDate          DateTime @map("opinion_date")
+  documentId           String   @unique @map("document_id") // Link to DOTO document
+  documentType         String   @default("DOTO") @map("document_type") // "DOTO", "TITLE_OPINION", etc.
+  curativeRequirements Json?    @map("curative_requirements") // Initial requirements from opinion
+  notes                String?  @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  lease        Lease?                @relation("TitleOpinions", fields: [leaseId], references: [id], onDelete: SetNull)
+  requirements CurativeRequirement[]
+
+  @@index([tractId])
+  @@index([leaseId])
+  @@index([opinionDate])
+  @@map("title_opinions")
+}
+
+model CurativeRequirement {
+  id                   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  titleOpinionId       String         @map("title_opinion_id") @db.Uuid
+  requirementType      String         @map("requirement_type") // "AFFIDAVIT", "RELEASE", "QUITCLAIM", etc.
+  description          String?        @db.Text
+  status               CurativeStatus @default(PENDING)
+  resolutionDocumentId String?        @map("resolution_document_id") // Link to resolution document
+  completedDate        DateTime?      @map("completed_date")
+  completedBy          String?        @map("completed_by") @db.Uuid // User ID
+  notes                String?        @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  titleOpinion TitleOpinion @relation(fields: [titleOpinionId], references: [id], onDelete: Cascade)
+
+  @@index([titleOpinionId])
+  @@index([status])
+  @@map("curative_requirements")
+}
+
+model Abstract {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tractId           String?        @map("tract_id") // Future: link to tracts table
+  abstractNumber    String?        @unique @map("abstract_number")
+  abstractorName    String?        @map("abstractor_name")
+  abstractorCompany String?        @map("abstractor_company")
+  abstractDate      DateTime       @map("abstract_date")
+  status            AbstractStatus @default(DRAFT)
+  version           Int            @default(1)
+  documentId        String         @map("document_id") // Link to abstract document
+  notes             String?        @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([tractId])
+  @@index([abstractNumber])
+  @@index([status])
+  @@map("abstracts")
+}
+
+// --- Data Room Models ---
+
+enum DataRoomStatus {
+  INCOMPLETE
+  COMPLETE
+  PENDING_REVIEW
+}
+
+enum DataRoomAccess {
+  PUBLIC
+  RESTRICTED
+}
+
+enum DataRoomTier {
+  SIMPLE
+  STANDARD
+  PREMIUM
+}
+
+model DataRoom {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  userId         String  @map("user_id") @db.Uuid
+  organizationId String? @map("organization_id") @db.Uuid
+
+  // Linked entities (references to P2P releases/assets by ID)
+  assetId   String? @map("asset_id") // Release/asset ID from P2P
+  releaseId String? @map("release_id") // Alternative reference
+
+  // Metadata
+  status        DataRoomStatus @default(INCOMPLETE)
+  access        DataRoomAccess @default(RESTRICTED)
+  tier          DataRoomTier   @default(SIMPLE)
+  documentCount Int            @default(0) @map("document_count")
+  totalSize     BigInt?        @map("total_size") // Total size in bytes
+
+  // Organization relationship (optional, if data room belongs to org)
+  organization Organization? @relation("DataRooms", fields: [organizationId], references: [id], onDelete: SetNull)
+
+  // User relationship
+  user User @relation("DataRooms", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Documents
+  documents DataRoomDocument[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([assetId])
+  @@index([releaseId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("data_rooms")
+}
+
+model DataRoomDocument {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dataRoomId String  @map("data_room_id") @db.Uuid
+  folderId   String? @map("folder_id") @db.Uuid // For folder organization
+
+  // File metadata
+  name         String
+  originalName String  @map("original_name")
+  mimeType     String? @map("mime_type")
+  size         BigInt // File size in bytes
+
+  // Storage
+  ipfsCid     String? @map("ipfs_cid") // IPFS Content ID
+  ipfsUrl     String? @map("ipfs_url") // Full IPFS URL
+  storagePath String? @map("storage_path") // Alternative storage path
+
+  // Metadata
+  description String? @db.Text
+  metadata    Json? // Additional metadata (watermark info, etc.)
+
+  // Folder relationship (self-referential for folders)
+  parentFolder   DataRoomDocument?  @relation("DataRoomFolders", fields: [folderId], references: [id], onDelete: SetNull)
+  childDocuments DataRoomDocument[] @relation("DataRoomFolders")
+
+  // Data room relationship
+  dataRoom DataRoom @relation(fields: [dataRoomId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([dataRoomId])
+  @@index([folderId])
+  @@index([createdAt])
+  @@map("data_room_documents")
+}

@@ -1,0 +1,70 @@
+# Dependencies
+node_modules
+.pnpm-store
+npm-debug.log
+pnpm-debug.log
+yarn-error.log
+
+# Build outputs
+dist
+build
+*.tsbuildinfo
+
+# Testing
+coverage
+.nyc_output
+*.test.js
+*.spec.js
+
+# Development
+.env
+.env.local
+.env.*.local
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+docs
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+.cache
+
+# Secrets and sensitive files
+*.key
+*.pem
+*.p12
+*.pfx
+*.env
+secrets
+.secrets
+
+# Test files (keep structure but exclude test data)
+**/__tests__/**
+**/*.test.ts
+**/*.spec.ts
+test
+tests

@@ -1,0 +1,245 @@
+services:
+  # --- INFRASTRUCTURE ---
+  db:
+    profiles: ["infrastructure", "apps"]
+    image: postgres:15
+    restart: always
+    env_file: ./.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-core_api_prod}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-core_api_prod}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - core-services-net
+
+  redis:
+    profiles: ["infrastructure", "apps"]
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_prod:/data
+    command: redis-server --maxmemory-policy noeviction
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - core-services-net
+
+  rabbitmq:
+    profiles: ["infrastructure", "apps"]
+    image: rabbitmq:3.13-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI port
+    volumes:
+      - rabbitmq_data_prod:/var/lib/rabbitmq/
+    env_file: ./.env
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS:-guest}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    networks:
+      - core-services-net
+
+  # --- ONE-SHOT MIGRATION JOB ---
+  migrations:
+    profiles: ["apps"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+      args:
+        APP_NAME: core-api
+    command: sh /usr/src/app/scripts/run-migrations.sh
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-core_api_prod}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-core_api_prod}
+      - NODE_ENV=production
+    networks:
+      - core-services-net
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # --- APPLICATION SERVICES ---
+  core-api:
+    profiles: ["apps"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        APP_NAME: core-api
+    ports:
+      - "3000:3000"
+    env_file: ./.env
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_DB=${POSTGRES_DB:-core_api_prod}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-core_api_prod}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+      - temp_uploads_prod:/usr/src/app/temp-uploads
+    networks:
+      - core-services-net
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    command: pnpm nest start core-api --watch
+
+  admin-service:
+    profiles: ["apps"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        APP_NAME: admin-service
+    ports:
+      - "4242:4242"
+    env_file: ./.env
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_DB=${POSTGRES_DB:-core_api_prod}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-core_api_prod}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - core-services-net
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    command: pnpm nest start admin-service --watch
+
+  kms-service:
+    profiles: ["apps"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        APP_NAME: kms-service
+    ports:
+      - "3001:3001"
+    env_file: ./.env
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_DB=${POSTGRES_DB:-core_api_prod}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-core_api_prod}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - core-services-net
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    command: pnpm nest start kms-service --watch
+
+  blockchain-service:
+    profiles: ["apps"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        APP_NAME: blockchain-service
+    ports:
+      - "3003:3003"
+    env_file: ./.env
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_DB=${POSTGRES_DB:-core_api_prod}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-core_api_prod}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - core-services-net
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    command: pnpm nest start blockchain-service --watch
+
+  ipfs-service:
+    profiles: ["apps"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        APP_NAME: ipfs-service
+    ports:
+      - "3004:3004"
+    env_file: ./.env
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_DB=${POSTGRES_DB:-core_api_prod}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-core_api_prod}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+      - temp_uploads_prod:/usr/src/app/temp-uploads
+    networks:
+      - core-services-net
+      - lens-platform_lens-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: pnpm nest start ipfs-service --watch
+
+volumes:
+  postgres_data_prod:
+  redis_data_prod:
+  rabbitmq_data_prod:
+  temp_uploads_prod:
+
+networks:
+  core-services-net:
+    driver: bridge
+  lens-platform_lens-network:
+    external: true

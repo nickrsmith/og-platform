@@ -1,0 +1,12 @@
+packages:
+  - 'apps/*'
+  - 'libs/*'
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - bcrypt
+  - msgpackr-extract
+  - prisma
+  - protobufjs
+  - unrs-resolver

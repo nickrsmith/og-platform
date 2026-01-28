@@ -1,0 +1,142 @@
+{
+  "name": "og-backend",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nest build",
+    "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "concurrently --names \"ADMIN-SVC,BLOCKCHAIN-SVC,KMS-SVC,IPFS-SVC,CORE-API\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold,bgYellow.bold,bgCyan.bold\" \"pnpm:start:dev:admin\" \"pnpm:start:dev:blockchain\" \"pnpm:start:dev:kms\" \"pnpm:start:dev:ipfs\" \"pnpm:start:dev:core-api\"",
+    "start:dev:admin": "pnpm nest start admin-service --watch",
+    "start:dev:blockchain": "pnpm nest start blockchain-service --watch",
+    "start:dev:kms": "pnpm nest start kms-service --watch",
+    "start:dev:ipfs": "pnpm nest start ipfs-service --watch",
+    "start:dev:core-api": "pnpm nest start core-api --watch",
+    "infra:up": "sudo docker compose up -d",
+    "infra:down": "sudo docker compose down",
+    "generate:key": "node ./scripts/generate-master-key.mjs",
+    "sync:abis": "node ./scripts/sync-abis.mjs",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest --maxWorkers=1",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:integration": "jest --maxWorkers=1 --testPathPattern=integration",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./apps/core-services/test/jest-e2e.json",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@aws-sdk/client-kms": "^3.913.0",
+    "@golevelup/nestjs-rabbitmq": "^6.0.2",
+    "@libp2p/crypto": "^5.1.8",
+    "@nestjs/axios": "^4.0.1",
+    "@nestjs/bullmq": "^11.0.3",
+    "@nestjs/cache-manager": "^3.0.1",
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/passport": "^11.0.5",
+    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^8.0.7",
+    "@peerbit/crypto": "^2.3.11",
+    "@prisma/client": "6.14.0",
+    "@types/multer": "^2.0.0",
+    "amqplib": "^0.10.8",
+    "multer": "^2.0.2",
+    "axios": "^1.11.0",
+    "bcrypt": "^6.0.0",
+    "bullmq": "^5.58.1",
+    "cache-manager": "^7.1.1",
+    "cache-manager-redis-store": "^3.0.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "dotenv": "^17.2.2",
+    "ethers": "^6.15.0",
+    "form-data": "^4.0.4",
+    "humanparser": "^2.7.0",
+    "jose": "^4.15.9",
+    "js-sha3": "^0.9.3",
+    "passport-jwt": "^4.0.1",
+    "prisma": "^6.16.2",
+    "reflect-metadata": "^0.2.2",
+    "resend": "^6.1.0",
+    "rxjs": "^7.8.1",
+    "tweetnacl": "^1.0.3",
+    "uint8arrays": "^5.1.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.18.0",
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
+    "@types/bcrypt": "^6.0.0",
+    "@types/express": "^5.0.0",
+    "@types/humanparser": "^1.1.8",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.10.7",
+    "@types/passport-jwt": "^4.0.1",
+    "@types/supertest": "^6.0.2",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.18.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.2",
+    "eslint-plugin-security": "^3.0.1",
+    "globals": "^16.0.0",
+    "jest": "^30.0.0",
+    "prettier": "^3.4.2",
+    "source-map-support": "^0.5.21",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5",
+    "ts-loader": "^9.5.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": ".",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "tsconfig": {
+            "module": "commonjs",
+            "resolvePackageJsonExports": false
+          }
+        }
+      ]
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "./coverage",
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.ts"
+    ],
+    "roots": [
+      "<rootDir>/apps/",
+      "<rootDir>/libs/"
+    ],
+    "moduleNameMapper": {
+      "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
+      "^@app/config(|/.*)$": "<rootDir>/libs/config/src/$1",
+      "^@app/database(|/.*)$": "<rootDir>/libs/database/src/$1"
+    },
+    "verbose": false
+  }
+}
