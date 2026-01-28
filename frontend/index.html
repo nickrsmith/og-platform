@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Empressa - Oil & Gas Asset Marketplace | Powered by Enverus</title>
+    <meta name="description" content="Buy, sell, trade, and finance oil & gas assets. Unified digital marketplace with AI-powered analytics and real-time Enverus data integration." />
+    <meta property="og:title" content="Empressa - Oil & Gas Asset Marketplace" />
+    <meta property="og:description" content="Transform how oil and gas assets are discovered, evaluated, and transacted. AI-powered analytics with Enverus integration." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+    <!-- Persona Identity Verification SDK -->
+    <script src="https://cdn.withpersona.com/dist/persona-v1.0.0.js"></script>
+    <script type="module">
+      import { Buffer } from "buffer";
+      import process from "process";
+      window.Buffer = Buffer;
+      window.process = process;
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Diagnostic script to catch early errors
+      window.addEventListener('error', function(e) {
+        console.error('Global error caught:', e.error);
+        const root = document.getElementById('root');
+        if (root && !root.innerHTML.trim()) {
+          root.innerHTML = `
+            <div style="padding: 20px; font-family: system-ui; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin: 20px;">
+              <h1 style="color: #856404; margin-top: 0;">⚠️ JavaScript Error Detected</h1>
+              <p><strong>Error:</strong> ${e.error?.message || e.message || 'Unknown error'}</p>
+              <p><strong>File:</strong> ${e.filename || 'Unknown'}</p>
+              <p><strong>Line:</strong> ${e.lineno || 'Unknown'}</p>
+              <p style="margin-top: 20px;">Check the browser console (F12) for more details.</p>
+              <details style="margin-top: 10px;">
+                <summary style="cursor: pointer; color: #856404;">Stack Trace</summary>
+                <pre style="background: #fff; padding: 10px; border-radius: 4px; overflow: auto; font-size: 12px;">${e.error?.stack || 'No stack trace available'}</pre>
+              </details>
+            </div>
+          `;
+        }
+      });
+      
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled promise rejection:', e.reason);
+        const root = document.getElementById('root');
+        if (root && !root.innerHTML.trim()) {
+          root.innerHTML = `
+            <div style="padding: 20px; font-family: system-ui; background: #f8d7da; border: 2px solid #dc3545; border-radius: 8px; margin: 20px;">
+              <h1 style="color: #721c24; margin-top: 0;">❌ Unhandled Promise Rejection</h1>
+              <p><strong>Error:</strong> ${e.reason?.message || String(e.reason) || 'Unknown error'}</p>
+              <p>Check the browser console (F12) for more details.</p>
+            </div>
+          `;
+        }
+      });
+      
+      // Check if React loaded after 3 seconds
+      setTimeout(function() {
+        const root = document.getElementById('root');
+        if (root && !root.innerHTML.trim() && !root.hasChildNodes()) {
+          root.innerHTML = `
+            <div style="padding: 20px; font-family: system-ui; background: #d1ecf1; border: 2px solid #0c5460; border-radius: 8px; margin: 20px;">
+              <h1 style="color: #0c5460; margin-top: 0;">⏳ React Not Loading</h1>
+              <p>The page loaded but React hasn't rendered anything after 3 seconds.</p>
+              <p><strong>Possible causes:</strong></p>
+              <ul>
+                <li>JavaScript module import error</li>
+                <li>React initialization failure</li>
+                <li>Missing dependencies</li>
+              </ul>
+              <p><strong>Next steps:</strong></p>
+              <ol>
+                <li>Open browser console (F12)</li>
+                <li>Check for red error messages</li>
+                <li>Look for "Failed to load module" errors</li>
+              </ol>
+            </div>
+          `;
+        }
+      }, 3000);
+    </script>
+  </body>
+</html>

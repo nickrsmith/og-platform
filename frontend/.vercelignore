@@ -1,0 +1,41 @@
+# Vercel ignore file
+# Files and directories to exclude from deployment
+
+# Development files
+*.md
+!README.md
+*.log
+.env.local
+.env.development
+
+# Build artifacts (will be regenerated)
+dist/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+__tests__/
+__mocks__/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
